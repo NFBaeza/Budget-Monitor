@@ -12,23 +12,50 @@ set(CMAKE_AUTOMOC ON) # Procesa macros como Q_OBJECT en los .h
 set(CMAKE_AUTOUIC ON) # Convierte tus .ui en código C++
 set(CMAKE_AUTORCC ON) # Maneja archivos de recursos (imágenes, iconos)
 
+# Tell AutoUIC where to find .ui files
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
+
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Charts)
 
+# Include directories
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/widgets)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/views)
+
+# Source files organized by type
 set(SOURCES
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
-    dashboardwidget.cpp
-    dashboardwidget.h
-    dashboardwidget.ui
+    src/main.cpp
+    src/views/mainwindow.cpp
+    src/widgets/dashboardwidget.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+# Header files
+set(HEADERS
+    include/views/mainwindow.h
+    include/widgets/dashboardwidget.h
+)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    Qt6::Widgets 
+# UI files
+set(UI_FILES
+    ui/mainwindow.ui
+    ui/dashboardwidget.ui
+)
+
+add_executable(${PROJECT_NAME}
+    ${SOURCES}
+    ${HEADERS}
+    ${UI_FILES}
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/widgets
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/views
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt6::Widgets
     Qt6::Sql
     Qt6::Charts
 )

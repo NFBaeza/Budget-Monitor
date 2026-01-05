@@ -1,5 +1,5 @@
-#include "dashboardwidget.h"
-#include "mainwindow.h"
+#include "widgets/dashboardwidget.h"
+#include "views/mainwindow.h"
 #include "./ui_dashboardwidget.h"
 #include <time.h>
 #include <QDateTime>

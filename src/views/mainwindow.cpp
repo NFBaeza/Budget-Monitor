@@ -1,5 +1,5 @@
-#include "mainwindow.h"
-#include "dashboardwidget.h"
+#include "views/mainwindow.h"
+#include "widgets/dashboardwidget.h"
 #include "./ui_mainwindow.h" // Archivo generado automáticamente por CMake
 #include <QMessageBox>
 #include <QSqlTableModel>
