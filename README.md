@@ -13,6 +13,9 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 - **Database Persistence**: All data stored locally in SQLite database
 
 
+## Screenshoot
+![Month View UI](./imgs/ui_MonthView.png)
+
 ## Technical Stack
 
 - **Qt Framework**: 6.8.3

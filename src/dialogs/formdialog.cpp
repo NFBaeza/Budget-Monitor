@@ -1,37 +1,6 @@
 #include "dialogs/formdialog.h"
 #include "./ui_formdialog.h"
 
-void PrintTable(QAbstractItemModel *model) {
-    if (!model) {
-        qDebug() << "El modelo es nulo.";
-        return;
-    }
-
-    int rows = model->rowCount();
-    int cols = model->columnCount();
-
-    qDebug() << "--- Imprimiendo Tabla ---";
-    qDebug() << "Filas:" << rows << "| Columnas:" << cols;
-
-    // 1. Imprimir Encabezados
-    QString headerLine = "| ";
-    for (int c = 0; c < cols; ++c) {
-        headerLine += model->headerData(c, Qt::Horizontal).toString() + " | ";
-    }
-    qDebug() << headerLine;
-    qDebug() << QString("-").repeated(headerLine.length());
-
-    // 2. Imprimir Datos
-    for (int r = 0; r < rows; ++r) {
-        QString rowLine = "| ";
-        for (int c = 0; c < cols; ++c) {
-            rowLine += model->data(model->index(r, c)).toString() + " | ";
-        }
-        qDebug() << rowLine;
-    }
-    qDebug() << "-------------------------";
-}
-
 FormDialog::FormDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::FormDialog)
