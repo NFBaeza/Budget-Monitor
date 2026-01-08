@@ -4,6 +4,9 @@
 #include <QMessageBox>
 #include <QSqlTableModel>
 #include <QLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include "dialogs/formdialog.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -12,10 +15,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     connect(ui->go, &QPushButton::clicked, this, &MainWindow::alPresionarBotonGo);
-
-    // BUENA PRÁCTICA: Conexión moderna de señales y slots
-    // Supongamos que en el Designer pusiste un botón llamado 'btnConectar'
-    // connect(ui->btnConectar, &QPushButton::clicked, this, &MainWindow::alPresionarBotonConectar);
 }
 
 MainWindow::~MainWindow()
@@ -24,30 +23,26 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::alPresionarBotonGo() {
-    // Ejemplo de interacción rápida
-    //QMessageBox::information(this, "Base de Datos", "Intentando refrescar datos...");
     MonthView *dashboard = new MonthView(this);
-    this->setCentralWidget(dashboard);
-    //this->layout()->setSizeConstraint(QLayout::SetDefaultConstraint);
-    
-    // CONEXIÓN CLAVE: Cuando la vista diga "volver", la MainWindow ejecuta "mostrarMenuPrincipal"
+
     connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-    
-    this->setCentralWidget(dashboard);
+    setCentralWidget(dashboard);
 }
 
 void MainWindow::showMainView() {
-    // Para volver al estado inicial, lo más fácil es crear un widget 
-    // que contenga lo que tenías antes, o simplemente limpiar:
-    
-    QWidget *contenedorPrincipal = new QWidget(this);
-    // Aquí tendrías que volver a crear tus botones/layouts si no están en un .ui aparte
-    // ...
+    QWidget *oldWidget = centralWidget();
+    if (oldWidget) {
+        oldWidget->deleteLater();
+    }
 
-    this->setCentralWidget(contenedorPrincipal); 
-}
+    QWidget *newCentralWidget = new QWidget(this);
+    QHBoxLayout *layout = new QHBoxLayout(newCentralWidget);
 
-void MainWindow::configurarVistaDatos() {
-    // Lógica para mostrar la tabla de la BD en un QTableView
-    // Esto lo usaremos cuando tengas tu tabla creada
+    QPushButton *goButton = new QPushButton("Go", newCentralWidget);
+    layout->addWidget(goButton);
+
+    // Reconectar el botón
+    connect(goButton, &QPushButton::clicked, this, &MainWindow::alPresionarBotonGo);
+
+    setCentralWidget(newCentralWidget);
 }

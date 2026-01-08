@@ -23,7 +23,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui; // Puntero a la interfaz
-    
+
     // Aquí podrías añadir un método privado para configurar la tabla de la BD
     void configurarVistaDatos();
     void debugTabla();

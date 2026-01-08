@@ -22,24 +22,28 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Charts)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/widgets)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/views)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs)
 
 # Source files organized by type
 set(SOURCES
     src/main.cpp
     src/views/mainwindow.cpp
     src/widgets/dashboardwidget.cpp
+    src/dialogs/formdialog.cpp
 )
 
 # Header files
 set(HEADERS
     include/views/mainwindow.h
     include/widgets/dashboardwidget.h
+    include/dialogs/formdialog.h
 )
 
 # UI files
 set(UI_FILES
     ui/mainwindow.ui
     ui/dashboardwidget.ui
+    ui/formdialog.ui
 )
 
 add_executable(${PROJECT_NAME}
@@ -48,17 +52,19 @@ add_executable(${PROJECT_NAME}
     ${UI_FILES}
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    PROJECT_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/widgets
     ${CMAKE_CURRENT_SOURCE_DIR}/include/views
-)
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs
+    )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Sql
     Qt6::Charts
 )
-
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/budget_monitor.db"
-     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

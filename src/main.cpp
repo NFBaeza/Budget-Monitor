@@ -16,24 +16,31 @@ bool DataBaseConnection() {
 
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
 
-    // Intenta encontrarla en la carpeta del ejecutable (donde CMake la copió)
-    QString path = QCoreApplication::applicationDirPath() + "/budget_monitor.db";
-    
-    // Si no está ahí, intenta en la carpeta raíz (donde VS Code suele iniciar)
-    if (!QFile::exists(path)) {
-        path = "budget_monitor.db"; 
+    QString projectRoot = QString(PROJECT_SOURCE_DIR);
+    QString dbPath = projectRoot + "/budget_monitor.db";
+
+    // Fallback: si la macro no está definida, buscar en el directorio padre del ejecutable
+    if (!QFile::exists(dbPath)) {
+        QDir buildDir(QCoreApplication::applicationDirPath());
+        buildDir.cdUp();
+        dbPath = buildDir.absolutePath() + "/budget_monitor.db";
     }
 
-    db.setDatabaseName(path);
+    // Último fallback: buscar en el directorio actual
+    if (!QFile::exists(dbPath)) {
+        dbPath = "budget_monitor.db";
+    }
+
+    db.setDatabaseName(dbPath);
 
     if (!db.open()) {
         qDebug() << "Error:" << db.lastError().text();
         return false;
     }
 
-    qDebug() << "Conectado a:" << QFileInfo(path).absoluteFilePath();
-    qDebug() << "Tablas:" << db.tables();
-    
+    qDebug() << "✅ Conectado a BD en:" << QFileInfo(dbPath).absoluteFilePath();
+    qDebug() << "Tablas disponibles:" << db.tables();
+
     return true;
 }
 
