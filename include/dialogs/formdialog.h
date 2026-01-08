@@ -22,6 +22,7 @@ class FormDialog : public QDialog {
 
 public:
     explicit FormDialog(QWidget *parent = nullptr);
+    explicit FormDialog(int transactionId, QWidget *parent = nullptr);
     ~FormDialog();
 
     QString getDate() const;
@@ -42,6 +43,9 @@ private:
     QSqlDatabase db = QSqlDatabase::database();
     QSqlTableModel *categoryModel = new QSqlTableModel(this, db);
     QSqlTableModel *accountModel = new QSqlTableModel(this, db);
+    int editingTransactionId = -1;  // -1 significa "modo agregar", >0 significa "modo editar"
+    void loadTransactionData(int transactionId);  // Función helper para cargar datos
+
 
     void initView();
     void updateComboText();

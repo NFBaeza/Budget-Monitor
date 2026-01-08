@@ -47,7 +47,7 @@ MonthView::MonthView(QWidget *parent) :
     month_name = QLocale().monthName(QDate::currentDate().month());
     connect(ui->BackButton, &QPushButton::clicked, this, &MonthView::BackButtonWasPressed);
     connect(ui->AddEntryButton, &QPushButton::clicked, this, &MonthView::onAddButtonClicked);
-
+    connect(ui->TableViewLastEntry, &QTableView::doubleClicked, this, &MonthView::OnTableRowDoubleClicked);
     InitView();
 }
 
@@ -58,6 +58,24 @@ MonthView::~MonthView() {
 void MonthView::BackButtonWasPressed(){
     emit backbutton_was_pressed();
 
+}
+
+void MonthView::OnTableRowDoubleClicked(const QModelIndex &index) {
+    int row = index.row();
+    
+    // Obtener el ID de la transacción (columna 0 oculta)
+    int transactionId = relational_model->data(
+        relational_model->index(row, 0)).toInt();
+    
+    qDebug() << "Editando transacción ID:" << transactionId;
+    
+    // Abrir el dialog en modo EDICIÓN con el ID
+    FormDialog dialog(transactionId, this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        qDebug() << "[onTableRowDoubleClicked] Transacción editada, refrescando...";
+        UpdateAllViews();
+    }//logica para el borrar
 }
 
 void  MonthView::UpdateTransactions(bool update_view){
@@ -90,26 +108,27 @@ void  MonthView::UpdateAccounts(){
 
 }
 
+void MonthView::UpdateAllViews(){
+    UpdateTransactions(true);
+    AmountByCategoryMap.clear();
+    SumAmountByCategory(AmountByCategoryMap);
+    UpdateLabelsFromFilter(simple_model, "type = 'income'", "Income");
+    UpdateLabelsFromFilter(simple_model, "type = 'expense'", "Expense");
+    UpdateExpensesIncomesAmountView(); 
+    UpdateSummary();
+    UpdatePieChart();
+
+    this->update();
+    this->repaint();
+    QCoreApplication::processEvents();
+}
 void MonthView::onAddButtonClicked() {
     FormDialog dialog(this);
 
     // Mostrar el diálogo (bloquea hasta que se cierre)
     if (dialog.exec() == QDialog::Accepted) {
         qDebug() << "[onAddButtonClicked] Diálogo aceptado, refrescando vistas...";
-
-        UpdateTransactions(true);
-
-        AmountByCategoryMap.clear();
-        SumAmountByCategory(AmountByCategoryMap);
-        UpdateLabelsFromFilter(simple_model, "type = 'income'", "Income");
-        UpdateLabelsFromFilter(simple_model, "type = 'expense'", "Expense");
-        UpdateExpensesIncomesAmountView(); 
-        UpdateSummary();
-        UpdatePieChart();
-
-        this->update();
-        this->repaint();
-        QCoreApplication::processEvents();
+        UpdateAllViews();
     }
 }
 

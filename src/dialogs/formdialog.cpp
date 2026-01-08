@@ -6,14 +6,84 @@ FormDialog::FormDialog(QWidget *parent)
     , ui(new Ui::FormDialog)
 {
     ui->setupUi(this);
+    ui->DeleteButton->setVisible(false);
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
     connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
     initView();
 }
 
+FormDialog::FormDialog(int transactionId, QWidget *parent)
+    : QDialog(parent),
+      ui(new Ui::FormDialog),
+      editingTransactionId(transactionId) {
+
+    ui->setupUi(this);
+    ui->DeleteButton->setVisible(true);
+    ui->TitleFormDialog->setText("Edit Transaction");
+
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
+    connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
+
+    initView();
+    loadTransactionData(transactionId);
+}
+
 FormDialog::~FormDialog() {
     delete ui;
+}
+
+void FormDialog::loadTransactionData(int transactionId) {
+    QSqlQuery query(db);
+    query.prepare("SELECT date, amount, category, account, description "
+                  "FROM money_transactions WHERE id = :id");
+    query.bindValue(":id", transactionId);
+
+    if (query.exec() && query.next()) {
+        QString dateStr = query.value("date").toString();
+        QDateTime dateTime = QDateTime::fromString(dateStr, "yyyy-MM-dd HH:mm:ss");
+        ui->DateTimeSelected->setDateTime(dateTime);
+
+        int amount = query.value("amount").toInt();
+        ui->InputAmountText->setText(QString::number(amount));
+
+        QString description = query.value("description").toString();
+        ui->DescriptionText->setText(description);
+
+        int categoryId = query.value("category").toInt();
+        int accountId = query.value("account").toInt();
+
+        // Primero determinar el tipo para filtrar las categorías correctamente
+        QSqlQuery typeQuery(db);
+        typeQuery.prepare("SELECT type FROM categories WHERE id = :id");
+        typeQuery.bindValue(":id", categoryId);
+        if (typeQuery.exec() && typeQuery.next()) {
+            QString type = typeQuery.value("type").toString();
+            if (type == "income") {
+                ui->IncomeRadioButton->setChecked(true);
+            } else {
+                ui->ExpenseRadioButton->setChecked(true);
+            }
+            // updateComboText() se llamará automáticamente por el signal toggled
+        }
+
+        // Ahora buscar el índice de la categoría en el modelo filtrado
+        for (int i = 0; i < categoryModel->rowCount(); ++i) {
+            if (categoryModel->index(i, 0).data().toInt() == categoryId) {
+                ui->ListCategoryDialog->setCurrentIndex(i);
+                break;
+            }
+        }
+
+        // Cargar la cuenta
+        for (int i = 0; i < accountModel->rowCount(); ++i) {
+            if (accountModel->index(i, 0).data().toInt() == accountId) {
+                ui->ListAccountDialog->setCurrentIndex(i);
+                break;
+            }
+        }
+    }
 }
 
 void FormDialog::onAcceptClicked() {
@@ -94,43 +164,42 @@ void FormDialog::initView(){
 }
 
 bool FormDialog::insertTransaction() {
-    // Obtener el ID de la categoría seleccionada
+   // Obtener datos del formulario
     int categoryRow = ui->ListCategoryDialog->currentIndex();
     int categoryId = categoryModel->index(categoryRow, 0).data().toInt();
-
-    // Obtener el ID del método de pago seleccionado
+    
     int accountRow = ui->ListAccountDialog->currentIndex();
     int accountId = accountModel->index(accountRow, 0).data().toInt();
-
-    // Preparar datos
+    
     QString date = ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
     int amount = ui->InputAmountText->text().toDouble();
     QString description = ui->DescriptionText->text();
 
     QSqlQuery query(db);
-    query.prepare("INSERT INTO money_transactions (date, amount, category, account, description) "
-                  "VALUES (:date, :amount, :category, :account, :description)");
-
+    
+    // Si estamos editando (id != -1), hacer UPDATE
+    if (editingTransactionId != -1) {
+        query.prepare("UPDATE money_transactions "
+                      "SET date = :date, amount = :amount, category = :category, "
+                      "account = :account, description = :description "
+                      "WHERE id = :id");
+        query.bindValue(":id", editingTransactionId);
+    } else {
+        query.prepare("INSERT INTO money_transactions (date, amount, category, account, description) "
+                      "VALUES (:date, :amount, :category, :account, :description)");
+    }
+    
     query.bindValue(":date", date);
     query.bindValue(":amount", amount);
     query.bindValue(":category", categoryId);
     query.bindValue(":account", accountId);
     query.bindValue(":description", description);
 
-    // Ejecutar la inserción
     if (!query.exec()) {
         qDebug() << "[insertTransaction] ERROR:" << query.lastError().text();
         return false;
     }
 
-    qDebug() << "[insertTransaction] Inserción exitosa! Last inserted ID:" << query.lastInsertId();
-
-    // Verificar que se insertó
-    QSqlQuery verifyQuery(db);
-    verifyQuery.exec("SELECT COUNT(*) FROM money_transactions");
-    if (verifyQuery.next()) {
-        qDebug() << "[insertTransaction] Total transacciones en BD:" << verifyQuery.value(0).toInt();
-    }
-
+    qDebug() << "[insertTransaction] Operación exitosa!";
     return true;
 }

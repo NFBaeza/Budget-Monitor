@@ -61,15 +61,20 @@
      </property>
      <item>
       <widget class="QPushButton" name="AddEntryButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string>Add Entry</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="DeletEntryButtom">
-       <property name="text">
-        <string>Delete Entry</string>
        </property>
       </widget>
      </item>
@@ -552,6 +557,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+         </property>
          <property name="sortingEnabled">
           <bool>true</bool>
          </property>
@@ -625,12 +633,18 @@
       <number>120</number>
      </property>
      <item>
-      <widget class="QPushButton" name="EditButton">
+      <widget class="QPushButton" name="EditCategoryButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="text">
         <string>Edit</string>

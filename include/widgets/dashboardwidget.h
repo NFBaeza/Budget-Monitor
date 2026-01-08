@@ -25,13 +25,10 @@ class MonthView : public QWidget {
 public:
     explicit MonthView(QWidget *parent = nullptr);
     QString month_name;
-    QSqlDatabase db = QSqlDatabase::database();
-    QSqlTableModel *simple_model = new QSqlTableModel(this, db);
-    QSqlRelationalTableModel *relational_model = new QSqlRelationalTableModel(this, db);
-    QMap<QString, int> AmountByCategoryMap;
     int totalIncomes = 0.0;
     int totalExpenses = 0.0;
     int savings =0.0;
+    QMap<QString, int> AmountByCategoryMap;
     QString MonthFilter;
     ~MonthView();
 
@@ -41,28 +38,27 @@ signals:
 private slots:
     void BackButtonWasPressed();
     void onAddButtonClicked();
-
+    void OnTableRowDoubleClicked(const QModelIndex &index);
 
 private:
     Ui::MonthView *ui;
-    void InitTransactionsView();
-    void PrintTable(QAbstractItemModel *model); 
+    QSqlDatabase db = QSqlDatabase::database();
+    QSqlTableModel *simple_model = new QSqlTableModel(this, db);
+    QSqlRelationalTableModel *relational_model = new QSqlRelationalTableModel(this, db);
+
+    void SumAmountByCategory(QMap<QString, int> &data_by_category);
     void UpdateLabelsFromFilter(QSqlTableModel *model, const QString &filter, const QString &labelPrefix);
-    void UpdateAmountByCategory();
-    void InitIncomeExpensesView();
     void UpdateTransactions(bool update_view);
     void InitView();
-    void InitAmount();
     void UpdatePieChart();
     void UpdateExpensesIncomesAmountView();
-    void UpdateAmountView(QString category, QString type ,int amount);
     void UpdateSummary();
     void UpdateCategories();
     void UpdateAccounts();
+    void UpdateAllViews();
     
     QWidget* FindWidgetByTexto(QLayout *layout, const QString &textoBuscado);
     QString GetTypeFromCategory(QString category);
-    void SumAmountByCategory(QMap<QString, int> &data_by_category);
 };
 
 #endif
