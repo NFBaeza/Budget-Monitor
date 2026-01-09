@@ -20,10 +20,10 @@ FormDialog::FormDialog(int transactionId, QWidget *parent)
 
     ui->setupUi(this);
     ui->DeleteButton->setVisible(true);
-    ui->TitleFormDialog->setText("Edit Transaction");
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
+    connect(ui->DeleteButton, &QPushButton::pressed, this, &FormDialog::onDeleteClicked);
     connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
 
     initView();
@@ -32,6 +32,33 @@ FormDialog::FormDialog(int transactionId, QWidget *parent)
 
 FormDialog::~FormDialog() {
     delete ui;
+}
+
+void FormDialog::onDeleteClicked() {
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, 
+        "Confirm Delete", 
+        "Are you sure you want to delete this transaction?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+    
+    if (reply != QMessageBox::Yes) {
+        return; 
+    }
+    
+    QSqlQuery query(db);
+    query.prepare("DELETE FROM money_transactions WHERE id = :id");
+    query.bindValue(":id", editingTransactionId);
+    
+    if (!query.exec()) {  
+        qDebug() << "[onDeleteClicked] ERROR:" << query.lastError().text();
+        QMessageBox::critical(this, "Error", "Failed to delete transaction");
+        return;
+    }
+    
+    QMessageBox::information(this, "Success", "Transaction deleted successfully!");
+    emit dataDeleted();  
+    accept();         
 }
 
 void FormDialog::loadTransactionData(int transactionId) {
@@ -54,7 +81,6 @@ void FormDialog::loadTransactionData(int transactionId) {
         int categoryId = query.value("category").toInt();
         int accountId = query.value("account").toInt();
 
-        // Primero determinar el tipo para filtrar las categorías correctamente
         QSqlQuery typeQuery(db);
         typeQuery.prepare("SELECT type FROM categories WHERE id = :id");
         typeQuery.bindValue(":id", categoryId);
@@ -65,10 +91,8 @@ void FormDialog::loadTransactionData(int transactionId) {
             } else {
                 ui->ExpenseRadioButton->setChecked(true);
             }
-            // updateComboText() se llamará automáticamente por el signal toggled
         }
 
-        // Ahora buscar el índice de la categoría en el modelo filtrado
         for (int i = 0; i < categoryModel->rowCount(); ++i) {
             if (categoryModel->index(i, 0).data().toInt() == categoryId) {
                 ui->ListCategoryDialog->setCurrentIndex(i);
@@ -76,7 +100,6 @@ void FormDialog::loadTransactionData(int transactionId) {
             }
         }
 
-        // Cargar la cuenta
         for (int i = 0; i < accountModel->rowCount(); ++i) {
             if (accountModel->index(i, 0).data().toInt() == accountId) {
                 ui->ListAccountDialog->setCurrentIndex(i);
@@ -87,25 +110,19 @@ void FormDialog::loadTransactionData(int transactionId) {
 }
 
 void FormDialog::onAcceptClicked() {
-    // Validar campos obligatorios
     if (ui->InputAmountText->text().isEmpty() || ui->DateTimeSelected->text().isEmpty()) {
         QMessageBox::warning(this, "Error", "Please fill all the options");
         return;
     }
-
-    // Insertar la transacción
+    
     if (!insertTransaction()) {
         QMessageBox::critical(this, "Error", "Failed to save transaction. Check console for details.");
         return;
     }
 
-    // Mostrar mensaje de éxito
     QMessageBox::information(this, "Success", "Transaction saved successfully!");
 
-    // Emitir señal para notificar al dashboard
     emit dataInserted();
-
-    // Cerrar el diálogo
     accept();
 }
 
@@ -134,29 +151,29 @@ QString FormDialog::getDescription() const {
 }
 
 void FormDialog::updateComboText(){
-    //qDebug()<< "EL toggle fue activado con texto igual a  " << ;
     if(ui->IncomeRadioButton->isChecked()){
         categoryModel->setFilter("type == 'income'");
     }else{
         categoryModel->setFilter("type == 'expense'");
     }
-    
+
     categoryModel->select();
-    
+
     ui->ListCategoryDialog->setModel(categoryModel);
-    ui->ListCategoryDialog->setModelColumn(1); 
-    return;
+    ui->ListCategoryDialog->setModelColumn(1);
 }
 
 void FormDialog::initView(){
-    ui->TitleFormDialog->setText("Add new data");
+    if(editingTransactionId >= 0){
+        ui->TitleFormDialog->setText("Edit Transaction");
+    }else{
+        ui->TitleFormDialog->setText("Add new data");
+    }
 
-    // Configurar modelo de categorías
     categoryModel->setTable("categories");
     categoryModel->select();
     updateComboText();
 
-    // Configurar modelo de métodos de pago
     accountModel->setTable("payment_methods");
     accountModel->select();
     ui->ListAccountDialog->setModel(accountModel);
@@ -164,7 +181,6 @@ void FormDialog::initView(){
 }
 
 bool FormDialog::insertTransaction() {
-   // Obtener datos del formulario
     int categoryRow = ui->ListCategoryDialog->currentIndex();
     int categoryId = categoryModel->index(categoryRow, 0).data().toInt();
     
@@ -176,8 +192,7 @@ bool FormDialog::insertTransaction() {
     QString description = ui->DescriptionText->text();
 
     QSqlQuery query(db);
-    
-    // Si estamos editando (id != -1), hacer UPDATE
+
     if (editingTransactionId != -1) {
         query.prepare("UPDATE money_transactions "
                       "SET date = :date, amount = :amount, category = :category, "
@@ -200,6 +215,6 @@ bool FormDialog::insertTransaction() {
         return false;
     }
 
-    qDebug() << "[insertTransaction] Operación exitosa!";
+    qDebug() << "[insertTransaction] Operation successful!";
     return true;
 }

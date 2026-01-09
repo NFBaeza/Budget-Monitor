@@ -39,6 +39,7 @@ private slots:
     void BackButtonWasPressed();
     void onAddButtonClicked();
     void OnTableRowDoubleClicked(const QModelIndex &index);
+    void OnEditButtonCliked();
 
 private:
     Ui::MonthView *ui;
@@ -54,7 +55,6 @@ private:
     void UpdateExpensesIncomesAmountView();
     void UpdateSummary();
     void UpdateCategories();
-    void UpdateAccounts();
     void UpdateAllViews();
     
     QWidget* FindWidgetByTexto(QLayout *layout, const QString &textoBuscado);

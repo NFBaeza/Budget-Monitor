@@ -2,6 +2,7 @@
 #include "views/mainwindow.h"
 #include "./ui_dashboardwidget.h"
 #include "dialogs/formdialog.h"
+#include "dialogs/categorydialog.h"
 #include <time.h>
 #include <QDateTime>
 #include <QCoreApplication>
@@ -9,17 +10,17 @@
 
 void PrintTable(QAbstractItemModel *model) {
     if (!model) {
-        qDebug() << "El modelo es nulo.";
+        qDebug() << "The model is null.";
         return;
     }
 
     int rows = model->rowCount();
     int cols = model->columnCount();
 
-    qDebug() << "--- Imprimiendo Tabla ---";
-    qDebug() << "Filas:" << rows << "| Columnas:" << cols;
+    qDebug() << "--- Printing Table ---";
+    qDebug() << "Rows:" << rows << "| Columns:" << cols;
 
-    // 1. Imprimir Encabezados
+    // 1. Print Headers
     QString headerLine = "| ";
     for (int c = 0; c < cols; ++c) {
         headerLine += model->headerData(c, Qt::Horizontal).toString() + " | ";
@@ -27,7 +28,7 @@ void PrintTable(QAbstractItemModel *model) {
     qDebug() << headerLine;
     qDebug() << QString("-").repeated(headerLine.length());
 
-    // 2. Imprimir Datos
+    // 2. Print Data
     for (int r = 0; r < rows; ++r) {
         QString rowLine = "| ";
         for (int c = 0; c < cols; ++c) {
@@ -48,6 +49,8 @@ MonthView::MonthView(QWidget *parent) :
     connect(ui->BackButton, &QPushButton::clicked, this, &MonthView::BackButtonWasPressed);
     connect(ui->AddEntryButton, &QPushButton::clicked, this, &MonthView::onAddButtonClicked);
     connect(ui->TableViewLastEntry, &QTableView::doubleClicked, this, &MonthView::OnTableRowDoubleClicked);
+    connect(ui->EditCategoryButton, &QPushButton::clicked, this, &MonthView::OnEditButtonCliked);
+
     InitView();
 }
 
@@ -60,22 +63,42 @@ void MonthView::BackButtonWasPressed(){
 
 }
 
+
+void MonthView::OnEditButtonCliked() {
+    CategoryDialog dialog(this);
+
+    connect(&dialog, &CategoryDialog::dataUpdated, this, [this]() {
+        qDebug() << "[OnEditButtonCliked] Categories Updated, refreshing...";
+        UpdateCategories();
+    });
+
+    if (dialog.exec() == QDialog::Accepted) {
+        qDebug() << "[OnEditButtonCliked] Categories edited, refreshing...";
+        
+        UpdateAllViews();
+    }
+}
+
 void MonthView::OnTableRowDoubleClicked(const QModelIndex &index) {
     int row = index.row();
-    
-    // Obtener el ID de la transacción (columna 0 oculta)
+
+    // Get transaction ID (hidden column 0)
     int transactionId = relational_model->data(
         relational_model->index(row, 0)).toInt();
-    
-    qDebug() << "Editando transacción ID:" << transactionId;
-    
-    // Abrir el dialog en modo EDICIÓN con el ID
+
+    qDebug() << "Editing transaction ID:" << transactionId;
+
     FormDialog dialog(transactionId, this);
-    
-    if (dialog.exec() == QDialog::Accepted) {
-        qDebug() << "[onTableRowDoubleClicked] Transacción editada, refrescando...";
+
+    connect(&dialog, &FormDialog::dataDeleted, this, [this]() {
+        qDebug() << "[OnTableRowDoubleClicked] Transaction deleted, refreshing...";
         UpdateAllViews();
-    }//logica para el borrar
+    });
+
+    if (dialog.exec() == QDialog::Accepted) {
+        qDebug() << "[onTableRowDoubleClicked] Transaction edited, refreshing...";
+        UpdateAllViews();
+    }
 }
 
 void  MonthView::UpdateTransactions(bool update_view){
@@ -99,14 +122,13 @@ void  MonthView::UpdateTransactions(bool update_view){
 }
 
 void  MonthView::UpdateCategories(){
+    UpdateLabelsFromFilter(simple_model, "type = 'income'", "Income");
+    UpdateLabelsFromFilter(simple_model, "type = 'expense'", "Expense");
+    UpdateExpensesIncomesAmountView(); 
     return;
 
 }
 
-void  MonthView::UpdateAccounts(){
-   return;
-
-}
 
 void MonthView::UpdateAllViews(){
     UpdateTransactions(true);
@@ -125,22 +147,24 @@ void MonthView::UpdateAllViews(){
 void MonthView::onAddButtonClicked() {
     FormDialog dialog(this);
 
-    // Mostrar el diálogo (bloquea hasta que se cierre)
+    // Show dialog (blocks until closed)
     if (dialog.exec() == QDialog::Accepted) {
-        qDebug() << "[onAddButtonClicked] Diálogo aceptado, refrescando vistas...";
+        qDebug() << "[onAddButtonClicked] Dialog accepted, refreshing views...";
         UpdateAllViews();
     }
 }
 
 void  MonthView::SumAmountByCategory(QMap<QString, int> &data_by_category) {
         QString originalFilter = relational_model->filter();
+        qDebug() << "[SumAmountByCategory] Original filter: "<< originalFilter;
         
         int max_row = simple_model->rowCount();
         
         for (int i = 0; i < max_row; ++i) {
             QString category_idx  = simple_model->index(i,0).data().toString();
             QString category_name = simple_model->index(i,1).data().toString();    
-            QString category_type = simple_model->index(i,2).data().toString();  
+            QString category_type = simple_model->index(i,2).data().toString(); 
+            category_name[0]=category_name[0].toUpper(); 
 
             QString filter = QString("money_transactions.category = '%1'").arg(category_idx);
             relational_model->setFilter(filter);
@@ -186,7 +210,7 @@ void MonthView::UpdateLabelsFromFilter(QSqlTableModel *model, const QString &fil
     model->setFilter(filter);
 
     if (!model->select()) {
-        qDebug() << "[UpdateLabelsFromFilter] Error al filtrar" << filter << ":" << model->lastError().text();
+        qDebug() << "[UpdateLabelsFromFilter] Error filtering" << filter << ":" << model->lastError().text();
         return;
     }
 
@@ -199,10 +223,11 @@ void MonthView::UpdateLabelsFromFilter(QSqlTableModel *model, const QString &fil
 
         if (label) {
             QString category = QString::number(i);
+            categoryName[0] = categoryName[0].toUpper();
             label->setText(categoryName);
             label->setVisible(true);
         } else {
-            qDebug() << "    ❌ Label NO encontrado!";
+            label->setText(objectCategory);
         }
     }
     model->setFilter("");
@@ -217,7 +242,7 @@ void MonthView::UpdateSummary(){
     totalExpenses = 0.0;
 
     for (const auto& [categoria, monto] : AmountByCategoryMap.asKeyValueRange()) {
-        QString tipo = GetTypeFromCategory(categoria);
+        QString tipo = GetTypeFromCategory(categoria.toLower());
         if(tipo == "expense"){
             totalExpenses += monto;
         }else{
@@ -245,8 +270,8 @@ void MonthView::UpdatePieChart() {
         QPieSlice *slice = series->append("Disponible", savings);
         slice->setBrush(Qt::lightGray); // Color gris para lo que sobra
     } else if (totalIncomes == 0 && totalExpenses > 0) {
-        // Si no hay ingresos cargados, el gráfico será solo de gastos (100% gastos)
-        //qDebug() << "Aviso: No hay ingresos, mostrando solo distribución de gastos.";
+        // If no incomes loaded, chart will only show expenses (100% expenses)
+        //qDebug() << "Warning: No incomes, showing only expense distribution.";
     }
 
     QChart *chart = new QChart();
@@ -257,7 +282,7 @@ void MonthView::UpdatePieChart() {
 
     for (QPieSlice *slice : series->slices()) {
         if (slice->value() <= 0) {
-            slice->setLabelVisible(false); // Oculta la etiqueta
+            slice->setLabelVisible(false);
             slice->setExploded(false);
         } else {
             double porcentaje = 100 * slice->percentage();
@@ -286,6 +311,7 @@ void MonthView::UpdateExpensesIncomesAmountView() {
             layout = ui->ExpensesLayout;
         }
 
+        category_name[0]=category_name[0].toUpper();
         QWidget* name_widget = FindWidgetByTexto(layout, category_name);
 
         if (name_widget) {;
@@ -297,10 +323,10 @@ void MonthView::UpdateExpensesIncomesAmountView() {
                 label_monto->setText(QString::number(amount));
                 label_monto->repaint();
             } else {
-                qDebug() << "    ❌ No se encontró el label de monto con ID:" << widget_id;
+                qDebug() << " Amount label not found with ID:" << widget_id;
             }
         } else {
-            qDebug() << "    ❌ No se encontró la categoría:" << category_name << "en el layout" << category_type;
+            qDebug() << " Category not found:" << category_name << "in layout" << category_type;
         }
     }
 }
@@ -308,6 +334,7 @@ void MonthView::UpdateExpensesIncomesAmountView() {
 void MonthView::InitView(){
     QString fechaFormateada = QDateTime::currentDateTime().toString("dd-MM-yyyy      HH:mm");
     ui->DateNowLabel->setText(fechaFormateada);
+    month_name[0]= month_name[0].toUpper();
     ui->MonthNameLabel->setText(month_name);
 
     QDate hoy = QDate::currentDate();

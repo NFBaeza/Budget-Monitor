@@ -30,6 +30,7 @@ set(SOURCES
     src/views/mainwindow.cpp
     src/widgets/dashboardwidget.cpp
     src/dialogs/formdialog.cpp
+    src/dialogs/categorydialog.cpp
 )
 
 # Header files
@@ -37,6 +38,7 @@ set(HEADERS
     include/views/mainwindow.h
     include/widgets/dashboardwidget.h
     include/dialogs/formdialog.h
+    include/dialogs/categorydialog.h
 )
 
 # UI files
@@ -44,6 +46,7 @@ set(UI_FILES
     ui/mainwindow.ui
     ui/dashboardwidget.ui
     ui/formdialog.ui
+    ui/categorydialog.ui
 )
 
 add_executable(${PROJECT_NAME}

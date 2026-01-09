@@ -14,6 +14,7 @@
 #include <QSqlRelation>
 #include <QRadioButton>
 #include <QDebug>
+#include <QPushButton>
 
 namespace Ui { class FormDialog; }
 
@@ -32,19 +33,21 @@ public:
     QString getDescription() const;
 
 signals:
-    void dataInserted(); // Señal que se emite cuando se insertan datos exitosamente
+    void dataInserted(); 
+    void dataDeleted();
 
 private slots:
     void onAcceptClicked();
     void onCancelClicked();
+    void onDeleteClicked();
 
 private:
     Ui::FormDialog *ui;
     QSqlDatabase db = QSqlDatabase::database();
     QSqlTableModel *categoryModel = new QSqlTableModel(this, db);
     QSqlTableModel *accountModel = new QSqlTableModel(this, db);
-    int editingTransactionId = -1;  // -1 significa "modo agregar", >0 significa "modo editar"
-    void loadTransactionData(int transactionId);  // Función helper para cargar datos
+    int editingTransactionId = -1;
+    void loadTransactionData(int transactionId);
 
 
     void initView();
