@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_budget_monitor_FILE /home/miosa/Documents/projects/budget_monitor/build/budget_monitor)
+set(__QT_DEPLOY_TARGET_budget_monitor_TYPE EXECUTABLE)
