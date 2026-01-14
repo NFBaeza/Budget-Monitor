@@ -1,12 +1,7 @@
 #include "views/mainwindow.h"
+#include "./ui_mainwindow.h"
 #include "widgets/dashboardwidget.h"
-#include "./ui_mainwindow.h" // Archivo generado automáticamente por CMake
-#include <QMessageBox>
-#include <QSqlTableModel>
-#include <QLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include "dialogs/formdialog.h"
+#include "widgets/savingwidget.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -14,7 +9,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    connect(ui->go, &QPushButton::clicked, this, &MainWindow::alPresionarBotonGo);
+    setFixedSize(500, 230);
+    connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
+    connect(ui->SavingsViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
 }
 
 MainWindow::~MainWindow()
@@ -22,10 +19,19 @@ MainWindow::~MainWindow()
     delete ui; // Liberamos la memoria de la interfaz
 }
 
-void MainWindow::alPresionarBotonGo() {
-    MonthView *dashboard = new MonthView(this);
+void MainWindow::onSavingPressed() {
+    QDate currentDate = QDate::currentDate();
+    SavingView *dashboard = new SavingView(currentDate, this);
+    connect(dashboard, &SavingView::backbutton_was_pressed, this, &MainWindow::showMainView);
+    setFixedSize(1080, 650);
+    setCentralWidget(dashboard);
+}
 
+void MainWindow::onCurrentMonthPressed() {
+    QDate currentDate = QDate::currentDate();
+    MonthView *dashboard = new MonthView(currentDate, this);
     connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
+    setFixedSize(1080, 650);
     setCentralWidget(dashboard);
 }
 
@@ -35,14 +41,13 @@ void MainWindow::showMainView() {
         oldWidget->deleteLater();
     }
 
-    QWidget *newCentralWidget = new QWidget(this);
-    QHBoxLayout *layout = new QHBoxLayout(newCentralWidget);
+    // Restore the UI from the .ui file
+    ui->setupUi(this);
 
-    QPushButton *goButton = new QPushButton("Go", newCentralWidget);
-    layout->addWidget(goButton);
+    // Restore the original window size
+    setFixedSize(500, 230);
 
-    // Reconectar el botón
-    connect(goButton, &QPushButton::clicked, this, &MainWindow::alPresionarBotonGo);
-
-    setCentralWidget(newCentralWidget);
+    // Reconnect the button signals
+    connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
+    connect(ui->SavingsViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
 }

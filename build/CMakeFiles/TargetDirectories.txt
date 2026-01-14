@@ -1,5 +1,0 @@
-/home/miosa/Documents/projects/budget_monitor/build/CMakeFiles/budget_monitor.dir
-/home/miosa/Documents/projects/budget_monitor/build/CMakeFiles/edit_cache.dir
-/home/miosa/Documents/projects/budget_monitor/build/CMakeFiles/rebuild_cache.dir
-/home/miosa/Documents/projects/budget_monitor/build/CMakeFiles/budget_monitor_autogen_timestamp_deps.dir
-/home/miosa/Documents/projects/budget_monitor/build/CMakeFiles/budget_monitor_autogen.dir
