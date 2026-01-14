@@ -1,6 +1,7 @@
 #ifndef CATEGORYDIALOG_H
 #define CATEGORYDIALOG_H
 
+#include "database/databasemanager.h"
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QTextEdit>
@@ -52,11 +53,11 @@ private slots:
 
 private:
     Ui::CategoryDialog *ui;
-    QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase& db = DatabaseManager::instance().getDatabase();
 
-    QSqlTableModel *incomeModel = new QSqlTableModel(this, db);
-    QSqlTableModel *expenseModel = new QSqlTableModel(this, db);
-    QSqlTableModel *accountModel = new QSqlTableModel(this, db);
+    QSqlTableModel *incomeModel{nullptr};
+    QSqlTableModel *expenseModel{nullptr};
+    QSqlTableModel *accountModel{nullptr};
 
     void initView();
     void loadCategories();

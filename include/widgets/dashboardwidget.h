@@ -1,6 +1,7 @@
 #ifndef DASHBOARDWIDGET_H
 #define DASHBOARDWIDGET_H
 
+#include "database/databasemanager.h"
 #include <QWidget>
 #include <QLabel>
 #include <QSqlRecord>
@@ -16,6 +17,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QMap>
+#include <QDateTime>
 
 namespace Ui { class MonthView; }
 
@@ -23,12 +25,13 @@ class MonthView : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MonthView(QWidget *parent = nullptr);
-    QString month_name;
+    explicit MonthView(QDate date_selected, QWidget *parent = nullptr);
+    QString month_name_;
+    QDate dateViewSelected;
     int totalIncomes = 0.0;
     int totalExpenses = 0.0;
     int savings =0.0;
-    QMap<QString, int> AmountByCategoryMap;
+    QMap<QString, int> amountByCategoryMap;
     QString MonthFilter;
     ~MonthView();
 
@@ -36,29 +39,30 @@ signals:
     void backbutton_was_pressed(); 
 
 private slots:
-    void BackButtonWasPressed();
+    void backButtonWasPressed();
     void onAddButtonClicked();
-    void OnTableRowDoubleClicked(const QModelIndex &index);
-    void OnEditButtonCliked();
+    void onTableRowDoubleClicked(const QModelIndex &index);
+    void onEditButtonCliked();
 
 private:
     Ui::MonthView *ui;
-    QSqlDatabase db = QSqlDatabase::database();
-    QSqlTableModel *simple_model = new QSqlTableModel(this, db);
-    QSqlRelationalTableModel *relational_model = new QSqlRelationalTableModel(this, db);
+    QSqlTableModel *categoryModel{nullptr};
+    QSqlTableModel *incomesModel{nullptr};
+    QSqlTableModel *expensesModel{nullptr};
+    QSqlRelationalTableModel *transactionModel{nullptr};
 
-    void SumAmountByCategory(QMap<QString, int> &data_by_category);
-    void UpdateLabelsFromFilter(QSqlTableModel *model, const QString &filter, const QString &labelPrefix);
-    void UpdateTransactions(bool update_view);
-    void InitView();
-    void UpdatePieChart();
-    void UpdateExpensesIncomesAmountView();
-    void UpdateSummary();
-    void UpdateCategories();
-    void UpdateAllViews();
+    void setAmountByCategory();
+    void updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix);
+    void updateTransactions();
+    void initView();
+    void updatePieChart();
+    void updateAmountView(QSqlTableModel *model, QLayout* layout);
+    void updateSummary();
+    void updateCategories();
+    void updateAllViews();
     
-    QWidget* FindWidgetByTexto(QLayout *layout, const QString &textoBuscado);
-    QString GetTypeFromCategory(QString category);
+    QWidget* findWidgetByTexto(QLayout *layout, const QString &textoBuscado);
+    QString getTypeFromCategory(const QString&  category);
 };
 
 #endif

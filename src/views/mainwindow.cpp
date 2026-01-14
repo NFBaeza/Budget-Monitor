@@ -9,27 +9,25 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setFixedSize(500, 230);
+    setFixedSize(500, 300);
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
-    connect(ui->SavingsViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
+    connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
 }
 
 MainWindow::~MainWindow()
 {
-    delete ui; // Liberamos la memoria de la interfaz
+    delete ui;
 }
 
 void MainWindow::onSavingPressed() {
-    QDate currentDate = QDate::currentDate();
-    SavingView *dashboard = new SavingView(currentDate, this);
+    SavingView *dashboard = new SavingView(this);
     connect(dashboard, &SavingView::backbutton_was_pressed, this, &MainWindow::showMainView);
     setFixedSize(1080, 650);
     setCentralWidget(dashboard);
 }
 
 void MainWindow::onCurrentMonthPressed() {
-    QDate currentDate = QDate::currentDate();
-    MonthView *dashboard = new MonthView(currentDate, this);
+    MonthView *dashboard = new MonthView(QDate::currentDate(), this);
     connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
     setFixedSize(1080, 650);
     setCentralWidget(dashboard);
@@ -49,5 +47,5 @@ void MainWindow::showMainView() {
 
     // Reconnect the button signals
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
-    connect(ui->SavingsViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
+    connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
 }

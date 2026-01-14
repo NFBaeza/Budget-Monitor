@@ -1,6 +1,7 @@
 #ifndef FORMDIALOG_H
 #define FORMDIALOG_H
 
+#include "database/databasemanager.h"
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QTextEdit>
@@ -43,9 +44,9 @@ private slots:
 
 private:
     Ui::FormDialog *ui;
-    QSqlDatabase db = QSqlDatabase::database();
-    QSqlTableModel *categoryModel = new QSqlTableModel(this, db);
-    QSqlTableModel *accountModel = new QSqlTableModel(this, db);
+    QSqlDatabase& db = DatabaseManager::instance().getDatabase();
+    QSqlTableModel *categoryModel{nullptr};
+    QSqlTableModel *accountModel{nullptr};
     int editingTransactionId = -1;
     void loadTransactionData(int transactionId);
 

@@ -7,6 +7,10 @@ FormDialog::FormDialog(QWidget *parent)
 {
     ui->setupUi(this);
     ui->DeleteButton->setVisible(false);
+
+    categoryModel = DatabaseManager::instance().getCategoryModel(this);
+    accountModel = DatabaseManager::instance().getAccountModel(this);
+
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
     connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
@@ -20,6 +24,9 @@ FormDialog::FormDialog(int transactionId, QWidget *parent)
 
     ui->setupUi(this);
     ui->DeleteButton->setVisible(true);
+
+    categoryModel = DatabaseManager::instance().getCategoryModel(this);
+    accountModel = DatabaseManager::instance().getAccountModel(this);
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
@@ -170,11 +177,9 @@ void FormDialog::initView(){
         ui->TitleFormDialog->setText("Add new data");
     }
 
-    categoryModel->setTable("categories");
     categoryModel->select();
     updateComboText();
 
-    accountModel->setTable("payment_methods");
     accountModel->select();
     ui->ListAccountDialog->setModel(accountModel);
     ui->ListAccountDialog->setModelColumn(1);

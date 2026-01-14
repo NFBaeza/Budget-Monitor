@@ -36,7 +36,7 @@ class SavingView : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SavingView(QDate month, QWidget *parent = nullptr);
+    explicit SavingView(QWidget *parent = nullptr);
     QDate dateViewSelected;
     QString month_name;
     QString monthFilter;

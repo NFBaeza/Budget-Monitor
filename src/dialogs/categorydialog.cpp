@@ -7,6 +7,10 @@ CategoryDialog::CategoryDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
+    incomeModel = DatabaseManager::instance().getIncomeModel(this);
+    expenseModel = DatabaseManager::instance().getExpenseModel(this);
+    accountModel = DatabaseManager::instance().getAccountModel(this);
+
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &CategoryDialog::onSaveClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &CategoryDialog::onCancelClicked);
 
@@ -33,20 +37,12 @@ CategoryDialog::~CategoryDialog() {
 }
 
 void CategoryDialog::initView() {
-    // Set up models
-    incomeModel->setTable("categories");
-    incomeModel->setFilter("type = 'income'");
     incomeModel->select();
-
-    expenseModel->setTable("categories");
-    expenseModel->setFilter("type = 'expense'");
     expenseModel->select();
-
-    accountModel->setTable("payment_methods");
     accountModel->select();
 
     ui->listIncomeView->setModel(incomeModel);
-    ui->listIncomeView->setModelColumn(1); 
+    ui->listIncomeView->setModelColumn(1);
 
     ui->listExpenseView->setModel(expenseModel);
     ui->listExpenseView->setModelColumn(1);

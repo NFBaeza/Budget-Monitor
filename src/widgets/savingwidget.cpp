@@ -6,10 +6,9 @@
 #include <QCoreApplication>
 
 
-SavingView::SavingView(QDate month, QWidget *parent) 
+SavingView::SavingView(QWidget *parent) 
     : QWidget(parent),
-      ui(new Ui::SavingView),
-      dateViewSelected(month) {
+      ui(new Ui::SavingView) {
 
     ui->setupUi(this);
 
