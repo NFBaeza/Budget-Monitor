@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(budget_monitor VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_PREFIX_PATH "/home/miosa/Qt/6.8.3/gcc_64")
-set(Qt6_DIR "/home/miosa/Qt/6.8.3/gcc_64/lib/cmake/Qt6")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,28 +21,36 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/widgets)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/views)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/database)
 
 # Source files organized by type
 set(SOURCES
     src/main.cpp
     src/views/mainwindow.cpp
     src/widgets/dashboardwidget.cpp
+    src/widgets/savingwidget.cpp
     src/dialogs/formdialog.cpp
     src/dialogs/categorydialog.cpp
+    src/database/databasemanager.cpp
+    
 )
 
 # Header files
 set(HEADERS
     include/views/mainwindow.h
     include/widgets/dashboardwidget.h
+    include/widgets/savingwidget.h
     include/dialogs/formdialog.h
     include/dialogs/categorydialog.h
+    include/database/databasemanager.h
 )
+    
 
 # UI files
 set(UI_FILES
     ui/mainwindow.ui
     ui/dashboardwidget.ui
+    ui/savingwidget.ui
     ui/formdialog.ui
     ui/categorydialog.ui
 )
@@ -64,6 +70,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/widgets
     ${CMAKE_CURRENT_SOURCE_DIR}/include/views
     ${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/database
     )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
