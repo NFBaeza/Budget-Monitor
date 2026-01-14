@@ -19,6 +19,11 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>9</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>Month View</string>
   </property>
@@ -105,6 +110,12 @@
      </property>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="frameShadow">
         <enum>QFrame::Shadow::Raised</enum>
        </property>
@@ -267,6 +278,12 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="frameShape">
         <enum>QFrame::Shape::NoFrame</enum>
        </property>
@@ -407,6 +424,11 @@
    </item>
    <item row="1" column="2" colspan="2">
     <widget class="QLabel" name="DateNowLabel">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>TextLabel</string>
      </property>
@@ -417,6 +439,12 @@
    </item>
    <item row="1" column="0" colspan="2">
     <widget class="QLabel" name="MonthNameLabel">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
      <property name="text">
       <string>Month</string>
      </property>
@@ -447,6 +475,12 @@
      </property>
      <item>
       <widget class="QLabel" name="label_4">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="frameShadow">
         <enum>QFrame::Shadow::Raised</enum>
        </property>
@@ -464,6 +498,12 @@
      </item>
      <item>
       <widget class="QLabel" name="TotalSavingsLabel">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="text">
         <string>Total of Savings</string>
        </property>
@@ -481,6 +521,12 @@
      </item>
      <item>
       <widget class="QLabel" name="TotalIncomesLabel">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="frameShape">
         <enum>QFrame::Shape::NoFrame</enum>
        </property>
@@ -513,6 +559,13 @@
      </item>
      <item>
       <widget class="QLabel" name="TotalExpensesLabel">
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+         <italic>false</italic>
+         <bold>true</bold>
+        </font>
+       </property>
        <property name="text">
         <string>Total of Expenses</string>
        </property>
@@ -541,6 +594,12 @@
        </property>
        <item>
         <widget class="QLabel" name="label_3">
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+           <italic>true</italic>
+          </font>
+         </property>
          <property name="frameShadow">
           <enum>QFrame::Shadow::Raised</enum>
          </property>
