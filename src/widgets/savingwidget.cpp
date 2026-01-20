@@ -131,7 +131,7 @@ void SavingView::updateBarGraph(){
 }
 
 void SavingView::initView() {
-    QDate initDate = dateViewSelected;
+    QDate initDate = QDate::currentDate();
     for(int i_month = 0; i_month < 12; i_month++){
         qDebug()<<"[initView] current month: "<< initDate.month();
 

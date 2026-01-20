@@ -1,0 +1,3 @@
+[submodule "libs/XLSXReader"]
+	path = libs/XLSXReader
+	url = git@github.com:NFBaeza/XLSXReader.git
