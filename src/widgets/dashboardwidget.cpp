@@ -3,6 +3,7 @@
 #include "./ui_dashboardwidget.h"
 #include "dialogs/formdialog.h"
 #include "dialogs/categorydialog.h"
+#include "dialogs/addingfiledialog.h"
 #include <time.h>
 #include <QDateTime>
 #include <QCoreApplication>
@@ -29,6 +30,7 @@ MonthView::MonthView(QDate date_selected, QWidget *parent) :
     connect(ui->AddEntryButton, &QPushButton::clicked, this, &MonthView::onAddButtonClicked);
     connect(ui->TableViewLastEntry, &QTableView::doubleClicked, this, &MonthView::onTableRowDoubleClicked);
     connect(ui->EditCategoryButton, &QPushButton::clicked, this, &MonthView::onEditButtonCliked);
+    connect(ui->addFileButton, &QPushButton::clicked, this, &MonthView::onAddFileButtonCliked);
 
     initView();
 }
@@ -42,6 +44,15 @@ void MonthView::backButtonWasPressed(){
 
 }
 
+void MonthView::onAddFileButtonCliked() {
+    AddingFileDialog dialog(this);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        qDebug() << "[onAddFileButtonCliked] Adding File, refreshing...";
+        
+        updateAllViews();
+    }
+}
 
 void MonthView::onEditButtonCliked() {
     CategoryDialog dialog(this);

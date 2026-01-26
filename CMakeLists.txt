@@ -6,24 +6,24 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-set(CMAKE_AUTOMOC ON) # Procesa macros como Q_OBJECT en los .h
-set(CMAKE_AUTOUIC ON) # Convierte tus .ui en código C++
-set(CMAKE_AUTORCC ON) # Maneja archivos de recursos (imágenes, iconos)
+set(CMAKE_AUTOMOC ON) 
+set(CMAKE_AUTOUIC ON) 
+set(CMAKE_AUTORCC ON) 
 
-# Tell AutoUIC where to find .ui files
+
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Charts)
 
-# Include directories
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/widgets)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/views)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/database)
 
-# Source files organized by type
+
 set(SOURCES
     src/main.cpp
     src/views/mainwindow.cpp
@@ -31,8 +31,8 @@ set(SOURCES
     src/widgets/savingwidget.cpp
     src/dialogs/formdialog.cpp
     src/dialogs/categorydialog.cpp
-    src/database/databasemanager.cpp
-    
+    src/dialogs/addingfiledialog.cpp
+    src/database/databasemanager.cpp  
 )
 
 # Header files
@@ -42,6 +42,7 @@ set(HEADERS
     include/widgets/savingwidget.h
     include/dialogs/formdialog.h
     include/dialogs/categorydialog.h
+    include/dialogs/addingfiledialog.h
     include/database/databasemanager.h
 )
     
@@ -53,7 +54,10 @@ set(UI_FILES
     ui/savingwidget.ui
     ui/formdialog.ui
     ui/categorydialog.ui
+    ui/addingfiledialog.ui
 )
+
+add_subdirectory(libs/XLSXReader)
 
 add_executable(${PROJECT_NAME}
     ${SOURCES}
@@ -77,4 +81,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Sql
     Qt6::Charts
+    XLSXREADER
 )

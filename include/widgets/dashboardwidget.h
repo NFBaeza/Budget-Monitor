@@ -60,6 +60,7 @@ private:
     void updateSummary();
     void updateCategories();
     void updateAllViews();
+    void onAddFileButtonCliked();
     
     QWidget* findWidgetByTexto(QLayout *layout, const QString &textoBuscado);
     QString getTypeFromCategory(const QString&  category);

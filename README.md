@@ -69,7 +69,14 @@ The application uses three main tables:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone --recursive  <repository-url>
+
+# Or, if you already have this repository cloned
+git submodule init
+git submodule update
+
+# then
+
 cd budget_monitor
 
 # Create build directory
