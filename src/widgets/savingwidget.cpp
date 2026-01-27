@@ -37,10 +37,13 @@ void SavingView::backButtonWasPressed(){
 
 void SavingView::getAmountByMonth(const QDate date){
     int number_of_transactions = transactionsModel->rowCount();
+    DatabaseManager::instance().printTable(transactionsModel);
+    qDebug()<<"[getAmountByMonth] number_of_transactions: "<<number_of_transactions;
     Ui::MONEY money_distrubition = {0,0,0};
 
     for(int row = 0; row < number_of_transactions; row++){
         QString category_from_row = transactionsModel->record(row).value("category").toString();
+        qDebug()<<"[getAmountByMonth] Categorias: "<<category_from_row;
         int amount_from_row = transactionsModel->record(row).value("amount").toInt();
         categoryModel->setFilter(QString("category == '%1'").arg(category_from_row));
         categoryModel->select();
@@ -139,7 +142,7 @@ void SavingView::initView() {
         QString lastDate = QDate(initDate.year(), initDate.month(), initDate.daysInMonth()).toString("yyyy-MM-dd");
         
         monthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2'").arg(firstDate).arg(lastDate);
-
+        qDebug()<<"[initView] filter "<<monthFilter;
         transactionsModel->setFilter(monthFilter);
         transactionsModel->select();
         getAmountByMonth(QDate::fromString(firstDate, "yyyy-MM-dd"));

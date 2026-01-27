@@ -42,6 +42,8 @@ private:
     void onCancelClicked();
     void onAcceptClicked();
 
+    bool uploadDataToDataBase(std::unique_ptr<Bank>& bank);
+
 };
 
 #endif

@@ -141,8 +141,10 @@ void MonthView::onAddButtonClicked() {
 void  MonthView::setAmountByCategory() {
     for (int i = 0; i < categoryModel->rowCount(); ++i) {
         QString category_idx  = categoryModel->index(i,0).data().toString();
-        QString category_name = categoryModel->index(i,1).data().toString(); 
-        category_name[0]=category_name[0].toUpper(); 
+        QString category_name = categoryModel->index(i,1).data().toString();
+        if (!category_name.isEmpty()) {
+            category_name[0] = category_name[0].toUpper();
+        } 
 
         QString filter = QString("%1 AND money_transactions.category = '%2'").arg(MonthFilter).arg(category_idx);
         transactionModel->setFilter(filter);
@@ -169,18 +171,21 @@ QString MonthView::getTypeFromCategory(const QString& category) {
 }
 
 QWidget* MonthView::findWidgetByTexto(QLayout *layout, const QString &textoBuscado) {
-    if (!layout) return nullptr;    
+    if (!layout) return nullptr;
     for (int i = 0; i < layout->count(); ++i) {
-        QWidget *widget = layout->itemAt(i)->widget();
+        QLayoutItem *item = layout->itemAt(i);
+        if (!item) continue;
+
+        QWidget *widget = item->widget();
         if (widget) {
             QLabel *label = qobject_cast<QLabel*>(widget);
-                        
+
             if (label && label->text().trimmed() == textoBuscado.trimmed()) {
                 return widget;
             }
         }
     }
-    return nullptr; 
+    return nullptr;
 }
 
 
@@ -191,11 +196,13 @@ void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &lab
         QLabel *label = this->findChild<QLabel*>(objectCategory);
 
         if (label) {
-            categoryName[0] = categoryName[0].toUpper();
+            if (!categoryName.isEmpty()) {
+                categoryName[0] = categoryName[0].toUpper();
+            }
             label->setText(categoryName);
             label->setVisible(true);
         } else {
-            label->setText(objectCategory); 
+            qDebug() << "Label not found:" << objectCategory;
         }
     }
 
@@ -268,8 +275,9 @@ void MonthView::updatePieChart() {
 void MonthView::updateAmountView(QSqlTableModel *model, QLayout* layout) {
     for (int i = 0; i < model->rowCount(); ++i) {
         QString category_name = model->index(i,1).data().toString();
+        if (category_name.isEmpty()) continue;
 
-        category_name[0]=category_name[0].toUpper();
+        category_name[0] = category_name[0].toUpper();
         QWidget* name_widget = findWidgetByTexto(layout, category_name);
 
         if (name_widget) {;
