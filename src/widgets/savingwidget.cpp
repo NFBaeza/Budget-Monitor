@@ -38,7 +38,6 @@ void SavingView::backButtonWasPressed(){
 void SavingView::getAmountByMonth(const QDate date){
     int number_of_transactions = transactionsModel->rowCount();
     DatabaseManager::instance().printTable(transactionsModel);
-    qDebug()<<"[getAmountByMonth] number_of_transactions: "<<number_of_transactions;
     Ui::MONEY money_distrubition = {0,0,0};
 
     for(int row = 0; row < number_of_transactions; row++){
@@ -67,23 +66,19 @@ void SavingView::updateSummary(){
     ui->labelTotalAmount->setText(QString::number(total_savings));
     ui->labelAverageAmount->setText(QString::number(total_savings / 12));
 
-    // Lambda para comparar por saving
     auto compareBySaving = [](const Ui::MONEY& a, const Ui::MONEY& b) {
         return a.saving < b.saving;
     };
 
-    // Max
     auto it_max = std::max_element(money_by_month.begin(), money_by_month.end(), compareBySaving);
     ui->labelHigherAmount->setText(QString::number(it_max->saving));
 
-    // Min
     auto it_min = std::min_element(money_by_month.begin(), money_by_month.end(), compareBySaving);
     ui->labelLowerAmount->setText(QString::number(it_min->saving));
 
-    // Ratio de crecimiento (comparando el mes más reciente con el más antiguo)
     if (money_by_month.size() >= 2) {
-        int saving_reciente = money_by_month.front().saving;  // El más reciente está al inicio
-        int saving_antiguo = money_by_month.back().saving;    // El más antiguo está al final
+        int saving_reciente = money_by_month.front().saving;  
+        int saving_antiguo = money_by_month.back().saving;    
 
         if (saving_antiguo != 0) {
             double ratio = ((double)(saving_reciente - saving_antiguo) / std::abs(saving_antiguo)) * 100.0;
@@ -134,7 +129,6 @@ void SavingView::updateBarGraph(){
 void SavingView::initView() {
     QDate initDate = QDate::currentDate();
     for(int i_month = 0; i_month < 12; i_month++){
-        qDebug()<<"[initView] current month: "<< initDate.month();
 
         QString firstDate = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");
         QString lastDate = QDate(initDate.year(), initDate.month(), initDate.daysInMonth()).toString("yyyy-MM-dd");

@@ -76,8 +76,6 @@ void MonthView::onTableRowDoubleClicked(const QModelIndex &index) {
     int transactionId = transactionModel->data(
         transactionModel->index(row, 0)).toInt();
 
-    qDebug() << "Editing transaction ID:" << transactionId;
-
     FormDialog dialog(transactionId, this);
 
     connect(&dialog, &FormDialog::dataDeleted, this, [this]() {
@@ -202,7 +200,7 @@ void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &lab
             label->setText(categoryName);
             label->setVisible(true);
         } else {
-            qDebug() << "Label not found:" << objectCategory;
+            qDebug() << "[updateLabelsFromFilter] Label not found:" << objectCategory;
         }
     }
 
@@ -288,10 +286,10 @@ void MonthView::updateAmountView(QSqlTableModel *model, QLayout* layout) {
                 label_monto->setText(QString::number(amountByCategoryMap[category_name.toLower()]));
                 label_monto->repaint();
             } else {
-                qDebug() << " Amount label not found with ID:" << widget_id;
+                qDebug() << "[updateAmountView] Amount label not found with ID:" << widget_id;
             }
         } else {
-            qDebug() << " Category not found:" << category_name << "in layout" << layout->objectName();
+            qDebug() << "[updateAmountView] Category not found:" << category_name << "in layout" << layout->objectName();
         }
     }
 }

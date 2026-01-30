@@ -37,7 +37,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
         bank->readBankMovements();
     }
     if(bank->transactions.empty()){
-        qDebug() << "No transactions to upload";
+        qDebug() << "[uploadDataToDataBase] No transactions to upload";
         return false;
     }
 
@@ -47,7 +47,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
         categoryQuery.bindValue(":category", t.category);
         
         if (!categoryQuery.exec()) {
-            qDebug() << "Error SELECT category:" << categoryQuery.lastError().text();
+            qDebug() << "[uploadDataToDataBase] Error SELECT category:" << categoryQuery.lastError().text();
             return false;
         }
         
@@ -58,7 +58,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
             insertCat.bindValue(":category", t.category);
             insertCat.bindValue(":type", (t.category.toLower() == "Abono") ? "income" : "expense");
             if (!insertCat.exec()) {
-                qDebug() << "Error INSERT category:" << insertCat.lastError().text();
+                qDebug() << "[uploadDataToDataBase] Error INSERT category:" << insertCat.lastError().text();
                 return false;
             }
             categoryId = insertCat.lastInsertId().toInt();
@@ -81,7 +81,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
             insertAcc.prepare("INSERT INTO payment_methods (method) VALUES (:method)");
             insertAcc.bindValue(":method", t.account);
             if (!insertAcc.exec()) {
-                qDebug() << "Error INSERT account:" << insertAcc.lastError().text();
+                qDebug() << "[uploadDataToDataBase] Error INSERT account:" << insertAcc.lastError().text();
                 return false;
             }
             accountId = insertAcc.lastInsertId().toInt();
@@ -99,14 +99,11 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
         insertQuery.bindValue(":description", t.description);
         
         if (!insertQuery.exec()) {
-            qDebug() << "Error INSERT transaction:" << insertQuery.lastError().text();
+            qDebug() << "[uploadDataToDataBase] Error INSERT transaction:" << insertQuery.lastError().text();
             return false;
         }
     }
     
-    qDebug() << "DB path:" << QSqlDatabase::database().databaseName();
-    qDebug() << "Transactions count:" << bank->transactions.size();
-    qDebug() << "[uploadDataToDataBase] Success!" << bank->transactions.size() << "transactions inserted";
     return true;
 }
 

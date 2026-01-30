@@ -8,7 +8,6 @@ MonthSelectorDialog::MonthSelectorDialog(QWidget *parent)
     ui->setupUi(this);
     
     QDate initDate = QDate::currentDate();
-    qDebug()<<"[MonthSelectorDialog] current date:"<< initDate.month();
     initView(initDate);
 }
 
@@ -33,7 +32,7 @@ void MonthSelectorDialog::initView(QDate date) {
         QString buttonName = QString("pushButton_%1").arg(id);
         QPushButton *buttonObj = this->findChild<QPushButton*>(buttonName);
         if (!buttonObj) {
-            qDebug() << "Button not found:" << buttonName;
+            qDebug() << "[initView] Button not found:" << buttonName;
             continue;
         }
         buttonObj->setText(QString("%1 %2").arg(month_name).arg(date.year()));
