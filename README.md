@@ -7,10 +7,11 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 - **Transaction Management**: Add, view, and track financial transactions
 - **Category-based Organization**: Separate income and expense categories
 - **Visual Analytics**: Pie chart visualization of expense distribution
-- **Monthly View**: Filter and analyze transactions by month
+- **Monthly View**: Analyze transactions by month and yearly Savings.
 - **Real-time Updates**: Dashboard updates automatically when new transactions are added
 - **Multiple Payment Methods**: Support for different payment accounts
 - **Database Persistence**: All data stored locally in SQLite database
+- **(New) XLSX Files Reader**: Add transactions via a XLSX files.
 
 
 ## Screenshoot
@@ -29,7 +30,9 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 
 ```
 budget_monitor/
-├── include/           # Header files
+├── libs/             # Modules files
+│   ├── XLSXReader/   # XLSX reader files
+├── include/          # Header files
 │   ├── dialogs/      # Dialog headers (FormDialog)
 │   ├── views/        # Main window headers
 │   └── widgets/      # Widget headers (Dashboard)
@@ -38,9 +41,7 @@ budget_monitor/
 │   ├── views/        # View implementations
 │   └── widgets/      # Widget implementations
 ├── ui/               # Qt Designer UI files
-│   ├── mainwindow.ui
-│   ├── dashboardwidget.ui
-│   └── formdialog.ui
+│
 ├── CMakeLists.txt    # Build configuration
 └── budget_monitor.db # SQLite database
 ```
@@ -94,25 +95,37 @@ cmake --build .
 
 ## Usage
 
-1. **Launch Application**: Click "Go" to access the dashboard
-2. **View Dashboard**: See monthly summary with income/expense breakdown
+1. **Launch Application**:
+   - Click "Current Month" to access the current dashboard
+   - Click "Savings" to access the yearly savings analysis
+   - Click "Past Month" to access the month view of selected month
+2. **View Dashboard**: See monthly summary with an income/expense breakdown
 3. **Add Transaction**: Click "Add Entry" button
    - Select transaction type (Income/Expense)
    - Choose category and payment method
    - Enter amount and description
    - Click OK to save
-4. **View Analytics**: Pie chart shows expense distribution
-5. **Navigate**: Use "Back" button to return to main menu
+4. **Add XLSX**: Click "Add XLSX file" button
+   - Select Account (Account must match your file)
+   - Add file path
+   - Click OK to save
+5. **Edit Table**: Double click on a transaction
+   - Modify fields and press "OK" button
+   - Press "Delete" to remove the transaction
+6. **Edit Category**: Click "Edit" button
+   - Press "+" to add Income/Expense/Account category
+   - Press "-" to remove category (Be careful with this action)
+   - Double-click on categories to rename them
+7. **View Analytics**: Pie chart shows expense distribution
+8. **Navigate**: Use "Back" button to return to main menu
 
 ## Roadmap
 
-- [ ] Edit and delete transactions
 - [ ] Date range filtering
-- [ ] Export to CSV/PDF
+- [ ] Export to PDF
 - [ ] Budget goals and alerts
 - [ ] Multi-currency support
-- [ ] Recurring transactions
-- [ ] Data backup and restore
+- [ ] Data backup and restore 
 
 ## Author
 *Natalia B*
