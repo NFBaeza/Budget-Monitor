@@ -43,7 +43,6 @@ void SavingView::getAmountByMonth(const QDate date){
 
     for(int row = 0; row < number_of_transactions; row++){
         QString category_from_row = transactionsModel->record(row).value("category").toString();
-        qDebug()<<"[getAmountByMonth] Categorias: "<<category_from_row;
         int amount_from_row = transactionsModel->record(row).value("amount").toInt();
         categoryModel->setFilter(QString("category == '%1'").arg(category_from_row));
         categoryModel->select();
@@ -56,7 +55,6 @@ void SavingView::getAmountByMonth(const QDate date){
     money_distrubition.saving = money_distrubition.incomes - money_distrubition.expenses;
     money_distrubition.date =  date;
     money_by_month.emplace_back(money_distrubition);
-    qDebug()<<"vector last element: "<< money_by_month.back().date.toString("MM-yy") <<" "<<money_by_month.back().expenses<<" "<<money_by_month.back().incomes<<" "<<money_by_month.back().saving;
 }
 
 void SavingView::updateSummary(){
@@ -142,7 +140,6 @@ void SavingView::initView() {
         QString lastDate = QDate(initDate.year(), initDate.month(), initDate.daysInMonth()).toString("yyyy-MM-dd");
         
         monthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2'").arg(firstDate).arg(lastDate);
-        qDebug()<<"[initView] filter "<<monthFilter;
         transactionsModel->setFilter(monthFilter);
         transactionsModel->select();
         getAmountByMonth(QDate::fromString(firstDate, "yyyy-MM-dd"));

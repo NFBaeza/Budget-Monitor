@@ -2,6 +2,7 @@
 #include "./ui_mainwindow.h"
 #include "widgets/dashboardwidget.h"
 #include "widgets/savingwidget.h"
+#include "dialogs/monthselectordialog.h"
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -12,11 +13,24 @@ MainWindow::MainWindow(QWidget *parent)
     setFixedSize(500, 300);
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
+    connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onPastMonthsButtonPressed() {
+    MonthSelectorDialog *dialog = new MonthSelectorDialog(this);
+    connect(dialog, &MonthSelectorDialog::month_clicked, this, [this](QDate date) {
+        MonthView *monthView = new MonthView(date, this);
+        connect(monthView, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
+        setFixedSize(1080, 650);
+        setCentralWidget(monthView);
+    });
+    connect(dialog, &MonthSelectorDialog::close_was_pressed, this, &MainWindow::showMainView);
+    setCentralWidget(dialog);
 }
 
 void MainWindow::onSavingPressed() {
@@ -48,4 +62,4 @@ void MainWindow::showMainView() {
     // Reconnect the button signals
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
-}
+    connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);}

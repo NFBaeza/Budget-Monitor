@@ -19,7 +19,7 @@ MonthView::MonthView(QDate date_selected, QWidget *parent) :
 
     month_name_ = QLocale().monthName(dateViewSelected.month());
     month_name_[0] = month_name_[0].toUpper();
-    ui->MonthNameLabel->setText(month_name_);
+    ui->MonthNameLabel->setText(QString("%1 %2").arg(month_name_).arg(dateViewSelected.year()));
 
     categoryModel = DatabaseManager::instance().getCategoryModel(this);
     incomesModel= DatabaseManager::instance().getIncomeModel(this);

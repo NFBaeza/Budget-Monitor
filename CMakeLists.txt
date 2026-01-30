@@ -32,7 +32,9 @@ set(SOURCES
     src/dialogs/formdialog.cpp
     src/dialogs/categorydialog.cpp
     src/dialogs/addingfiledialog.cpp
+    src/dialogs/monthselectordialog.cpp
     src/database/databasemanager.cpp  
+    
 )
 
 # Header files
@@ -43,6 +45,7 @@ set(HEADERS
     include/dialogs/formdialog.h
     include/dialogs/categorydialog.h
     include/dialogs/addingfiledialog.h
+    include/dialogs/monthselectordialog.h
     include/database/databasemanager.h
 )
     
@@ -54,6 +57,7 @@ set(UI_FILES
     ui/savingwidget.ui
     ui/formdialog.ui
     ui/categorydialog.ui
+    ui/monthselectordialog.ui
     ui/addingfiledialog.ui
 )
 
