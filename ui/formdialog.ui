@@ -115,6 +115,13 @@
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
+       <property name="date">
+        <date>
+         <year>2020</year>
+         <month>1</month>
+         <day>1</day>
+        </date>
+       </property>
        <property name="maximumDate">
         <date>
          <year>2060</year>

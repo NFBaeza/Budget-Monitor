@@ -14,6 +14,7 @@ FormDialog::FormDialog(QWidget *parent)
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
     connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
+    ui->DateTimeSelected->setDate(QDate::currentDate());
     initView();
 }
 
