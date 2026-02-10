@@ -33,8 +33,8 @@ set(SOURCES
     src/dialogs/categorydialog.cpp
     src/dialogs/addingfiledialog.cpp
     src/dialogs/monthselectordialog.cpp
-    src/database/databasemanager.cpp  
-    
+    src/database/databasemanager.cpp 
+    src/database/databaseworker.cpp   
 )
 
 # Header files
@@ -47,6 +47,7 @@ set(HEADERS
     include/dialogs/addingfiledialog.h
     include/dialogs/monthselectordialog.h
     include/database/databasemanager.h
+    include/database/databaseworker.h
 )
     
 

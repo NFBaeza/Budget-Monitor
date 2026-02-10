@@ -50,10 +50,9 @@ private:
     int editingTransactionId = -1;
     void loadTransactionData(int transactionId);
 
-
     void initView();
     void updateComboText();
-    bool insertTransaction();
+    void setButtonsEnabled(bool enabled);
 };
 
 #endif

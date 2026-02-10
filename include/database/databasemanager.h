@@ -7,9 +7,12 @@
 #include <QAbstractItemModel>
 #include <QSqlRelationalDelegate>
 #include <QObject>
+#include <QThread>
 #include <memory>
 #include <QString>
 #include <QMap>
+
+class DatabaseWorker;
 
 class DatabaseManager : public QObject {
     Q_OBJECT
@@ -33,21 +36,24 @@ public:
     
     // Query helpers (preparación para futuro)
     bool executeQuery(const QString &query);
-    
+
     QSqlDatabase& getDatabase();
+    DatabaseWorker* worker() const;
+    static QMap<QString, QString> loadEnvFile();
 
 private:
     // Constructor privado para singleton
     DatabaseManager();
-    ~DatabaseManager() = default;
-    
+    ~DatabaseManager();
+
     QSqlDatabase db;
+    QThread m_workerThread;
+    DatabaseWorker *m_worker{nullptr};
     
     // Helper para configurar modelos comunes
     void setupCategoryModel(QSqlTableModel *model);
     void setupAccountModel(QSqlTableModel *model);
     void setupTransactionsModel(QSqlRelationalTableModel *model);
-    static QMap<QString, QString> loadEnvFile();
 };
 
 #endif // DATABASEMANAGER_H

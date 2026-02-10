@@ -33,7 +33,6 @@ private slots:
 
 private:
     Ui::AddingFileDialog *ui;
-    QSqlDatabase& db = DatabaseManager::instance().getDatabase();
 
     QSqlTableModel *incomeModel{nullptr};
     QSqlTableModel *expenseModel{nullptr};
@@ -41,8 +40,6 @@ private:
 
     void onCancelClicked();
     void onAcceptClicked();
-
-    bool uploadDataToDataBase(std::unique_ptr<Bank>& bank);
 
 };
 

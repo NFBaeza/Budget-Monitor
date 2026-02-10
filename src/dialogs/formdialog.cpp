@@ -1,4 +1,5 @@
 #include "dialogs/formdialog.h"
+#include "database/databaseworker.h"
 #include "./ui_formdialog.h"
 
 extern QString user_id;
@@ -44,34 +45,46 @@ FormDialog::~FormDialog() {
     delete ui;
 }
 
+void FormDialog::setButtonsEnabled(bool enabled) {
+    ui->buttonBox->setEnabled(enabled);
+    ui->DeleteButton->setEnabled(enabled);
+}
+
 void FormDialog::onDeleteClicked() {
     QMessageBox::StandardButton reply = QMessageBox::question(
-        this, 
-        "Confirm Delete", 
+        this,
+        "Confirm Delete",
         "Are you sure you want to delete this transaction?",
         QMessageBox::Yes | QMessageBox::No
     );
-    
+
     if (reply != QMessageBox::Yes) {
-        return; 
-    }
-    
-    QSqlQuery query(db);
-    query.prepare("DELETE FROM money_transactions WHERE id = :id");
-    query.bindValue(":id", editingTransactionId);
-    
-    if (!query.exec()) {  
-        qDebug() << "[onDeleteClicked] ERROR:" << query.lastError().text();
-        QMessageBox::critical(this, "Error", "Failed to delete transaction");
         return;
     }
-    
-    QMessageBox::information(this, "Success", "Transaction deleted successfully!");
-    emit dataDeleted();  
-    accept();         
+
+    setButtonsEnabled(false);
+    auto *worker = DatabaseManager::instance().worker();
+
+    connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
+        if (op == "deleteTransaction") {
+            emit dataDeleted();
+            accept();
+        }
+    }, Qt::SingleShotConnection);
+
+    connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
+        if (op == "deleteTransaction") {
+            QMessageBox::critical(this, "Error", "Failed to delete transaction: " + err);
+            setButtonsEnabled(true);
+        }
+    }, Qt::SingleShotConnection);
+
+    QMetaObject::invokeMethod(worker, "deleteTransaction", Qt::QueuedConnection,
+                              Q_ARG(int, editingTransactionId));
 }
 
 void FormDialog::loadTransactionData(int transactionId) {
+    // Keep synchronous on UI thread — single-row SELECT at dialog open
     QSqlQuery query(db);
     query.prepare("SELECT date, amount, category_id, account_id, description "
                   "FROM money_transactions WHERE id = :id AND user_id = :user_id");
@@ -126,16 +139,54 @@ void FormDialog::onAcceptClicked() {
         QMessageBox::warning(this, "Error", "Please fill all the options");
         return;
     }
-    
-    if (!insertTransaction()) {
-        QMessageBox::critical(this, "Error", "Failed to save transaction. Check console for details.");
-        return;
+
+    int categoryRow = ui->ListCategoryDialog->currentIndex();
+    int categoryId = categoryModel->index(categoryRow, 0).data().toInt();
+
+    int accountRow = ui->ListAccountDialog->currentIndex();
+    int accountId = accountModel->index(accountRow, 0).data().toInt();
+
+    QString date = ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
+    int amount = ui->InputAmountText->text().toDouble();
+    QString description = ui->DescriptionText->text();
+
+    setButtonsEnabled(false);
+    auto *worker = DatabaseManager::instance().worker();
+
+    QString opName = (editingTransactionId != -1) ? "updateTransaction" : "insertTransaction";
+
+    connect(worker, &DatabaseWorker::operationFinished, this, [this, opName](const QString &op) {
+        if (op == opName) {
+            emit dataInserted();
+            accept();
+        }
+    }, Qt::SingleShotConnection);
+
+    connect(worker, &DatabaseWorker::operationError, this, [this, opName](const QString &op, const QString &err) {
+        if (op == opName) {
+            QMessageBox::critical(this, "Error", "Failed to save transaction: " + err);
+            setButtonsEnabled(true);
+        }
+    }, Qt::SingleShotConnection);
+
+    if (editingTransactionId != -1) {
+        QMetaObject::invokeMethod(worker, "updateTransaction", Qt::QueuedConnection,
+                                  Q_ARG(int, editingTransactionId),
+                                  Q_ARG(QString, user_id),
+                                  Q_ARG(QString, date),
+                                  Q_ARG(int, amount),
+                                  Q_ARG(int, categoryId),
+                                  Q_ARG(int, accountId),
+                                  Q_ARG(QString, description));
+    } else {
+        QMetaObject::invokeMethod(worker, "insertTransaction", Qt::QueuedConnection,
+                                  Q_ARG(QString, user_id),
+                                  Q_ARG(QString, date),
+                                  Q_ARG(int, amount),
+                                  Q_ARG(int, categoryId),
+                                  Q_ARG(int, accountId),
+                                  Q_ARG(QString, description));
     }
-
-    QMessageBox::information(this, "Success", "Transaction saved successfully!");
-
-    emit dataInserted();
-    accept();
 }
 
 void FormDialog::onCancelClicked() {
@@ -189,45 +240,4 @@ void FormDialog::initView(){
     accountModel->select();
     ui->ListAccountDialog->setModel(accountModel);
     ui->ListAccountDialog->setModelColumn(2);
-}
-
-bool FormDialog::insertTransaction() {
-    int categoryRow = ui->ListCategoryDialog->currentIndex();
-    int categoryId = categoryModel->index(categoryRow, 0).data().toInt();
-    qDebug()<<"[insertTransaction] categoryId antes del push es "<<categoryId;
-    
-    int accountRow = ui->ListAccountDialog->currentIndex();
-    int accountId = accountModel->index(accountRow, 0).data().toInt();
-    qDebug()<<"[insertTransaction] accountId antes del push  es "<<accountId;
-
-    QString date = ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
-    int amount = ui->InputAmountText->text().toDouble();
-    QString description = ui->DescriptionText->text();
-
-    QSqlQuery query(db);
-
-    if (editingTransactionId != -1) {
-        query.prepare("UPDATE money_transactions "
-                      "SET user_id = :user_id, date = :date, amount = :amount, category_id = :category, "
-                      "account_id = :account, description = :description "
-                      "WHERE id = :id");
-        query.bindValue(":id", editingTransactionId);
-    } else {
-        query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
-                      "VALUES (:user_id, :date, :amount, :category, :account, :description)");
-    }
-    query.bindValue(":user_id", user_id);
-    query.bindValue(":date", date);
-    query.bindValue(":amount", amount);
-    query.bindValue(":category", categoryId);
-    query.bindValue(":account", accountId);
-    query.bindValue(":description", description);
-
-    if (!query.exec()) {
-        qDebug() << "[insertTransaction] ERROR:" << query.lastError().text();
-        return false;
-    }
-
-    qDebug() << "[insertTransaction] Operation successful!";
-    return true;
 }
