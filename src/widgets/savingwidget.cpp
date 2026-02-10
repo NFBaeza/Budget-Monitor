@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QCoreApplication>
 
+extern QString user_id;
 
 SavingView::SavingView(QWidget *parent) 
     : QWidget(parent),
@@ -18,7 +19,7 @@ SavingView::SavingView(QWidget *parent)
     expenseModel = DatabaseManager::instance().getExpenseModel(this);
     
     connect(ui->backButton, &QPushButton::clicked, this, &SavingView::backButtonWasPressed);
-
+    
     QString fechaFormateada = QString("Current Date/Time:\n%1").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy  HH:mm"));
     ui->labelCurrentTime->setText(fechaFormateada);
     ui->labelMonth->setText("Savings Year Report");
@@ -37,13 +38,12 @@ void SavingView::backButtonWasPressed(){
 
 void SavingView::getAmountByMonth(const QDate date){
     int number_of_transactions = transactionsModel->rowCount();
-    DatabaseManager::instance().printTable(transactionsModel);
     Ui::MONEY money_distrubition = {0,0,0};
 
     for(int row = 0; row < number_of_transactions; row++){
-        QString category_from_row = transactionsModel->record(row).value("category").toString();
+        QString category_from_row = transactionsModel->record(row).value("category_id").toString();
         int amount_from_row = transactionsModel->record(row).value("amount").toInt();
-        categoryModel->setFilter(QString("category == '%1'").arg(category_from_row));
+        categoryModel->setFilter(QString("name == '%1'").arg(category_from_row));
         categoryModel->select();
         if(categoryModel->record(0).value("type").toString() == "expense"){
             money_distrubition.expenses+=amount_from_row;
@@ -133,7 +133,7 @@ void SavingView::initView() {
         QString firstDate = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");
         QString lastDate = QDate(initDate.year(), initDate.month(), initDate.daysInMonth()).toString("yyyy-MM-dd");
         
-        monthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2'").arg(firstDate).arg(lastDate);
+        monthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2' AND money_transactions.user_id = '%3'").arg(firstDate).arg(lastDate).arg(user_id);   
         transactionsModel->setFilter(monthFilter);
         transactionsModel->select();
         getAmountByMonth(QDate::fromString(firstDate, "yyyy-MM-dd"));

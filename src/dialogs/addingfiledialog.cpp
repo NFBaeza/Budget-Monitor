@@ -1,6 +1,8 @@
 #include "dialogs/addingfiledialog.h"
 #include "./ui_addingfiledialog.h"
 
+extern QString user_id;
+
 AddingFileDialog::AddingFileDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::AddingFileDialog)
@@ -25,7 +27,7 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
     ui->filePathLineEdit->setPlaceholderText("Select a file ...");
        
     ui->accountComboBox->setModel(accountModel);
-    ui->accountComboBox->setModelColumn(1);
+    ui->accountComboBox->setModelColumn(2);
 }
 
 AddingFileDialog::~AddingFileDialog() {
@@ -43,7 +45,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
 
     for(auto& t : bank->transactions){
         QSqlQuery categoryQuery;
-        categoryQuery.prepare("SELECT id FROM categories WHERE category = :category");
+        categoryQuery.prepare("SELECT id FROM categories WHERE name = :category");
         categoryQuery.bindValue(":category", t.category);
         
         if (!categoryQuery.exec()) {
@@ -54,9 +56,10 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
         int categoryId;
         if (!categoryQuery.next()) {
             QSqlQuery insertCat;
-            insertCat.prepare("INSERT INTO categories (category, type) VALUES (:category, :type)");
+            insertCat.prepare("INSERT INTO categories (user_id, name, type) VALUES (:user, :category, :type)");
             insertCat.bindValue(":category", t.category);
             insertCat.bindValue(":type", (t.category.toLower() == "Abono") ? "income" : "expense");
+            insertCat.bindValue(":user", user_id);
             if (!insertCat.exec()) {
                 qDebug() << "[uploadDataToDataBase] Error INSERT category:" << insertCat.lastError().text();
                 return false;
@@ -68,7 +71,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
 
        
         QSqlQuery accountQuery;
-        accountQuery.prepare("SELECT id FROM payment_methods WHERE method = :account"); 
+        accountQuery.prepare("SELECT id FROM accounts WHERE name = :account"); 
         accountQuery.bindValue(":account", t.account);
         if (!accountQuery.exec()) {
             qDebug() << "Error SELECT account:" << accountQuery.lastError().text();
@@ -78,7 +81,7 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
         int accountId;
         if (!accountQuery.next()) {
             QSqlQuery insertAcc;
-            insertAcc.prepare("INSERT INTO payment_methods (method) VALUES (:method)");
+            insertAcc.prepare("INSERT INTO accounts (name) VALUES (:method)");
             insertAcc.bindValue(":method", t.account);
             if (!insertAcc.exec()) {
                 qDebug() << "[uploadDataToDataBase] Error INSERT account:" << insertAcc.lastError().text();
@@ -90,8 +93,9 @@ bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
         }
 
         QSqlQuery insertQuery;
-        insertQuery.prepare("INSERT INTO money_transactions (date, amount, category, account, description) "
-                            "VALUES (:date, :amount, :category, :account, :description)");
+        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
+                            "VALUES (:user, :date, :amount, :category, :account, :description)");
+        insertQuery.bindValue(":user", user_id);
         insertQuery.bindValue(":date", t.date);
         insertQuery.bindValue(":amount", t.amount);
         insertQuery.bindValue(":category", categoryId);

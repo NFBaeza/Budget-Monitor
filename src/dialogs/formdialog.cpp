@@ -1,6 +1,8 @@
 #include "dialogs/formdialog.h"
 #include "./ui_formdialog.h"
 
+extern QString user_id;
+
 FormDialog::FormDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::FormDialog)
@@ -71,13 +73,14 @@ void FormDialog::onDeleteClicked() {
 
 void FormDialog::loadTransactionData(int transactionId) {
     QSqlQuery query(db);
-    query.prepare("SELECT date, amount, category, account, description "
-                  "FROM money_transactions WHERE id = :id");
+    query.prepare("SELECT date, amount, category_id, account_id, description "
+                  "FROM money_transactions WHERE id = :id AND user_id = :user_id");
     query.bindValue(":id", transactionId);
+    query.bindValue(":user_id", user_id);
 
     if (query.exec() && query.next()) {
         QString dateStr = query.value("date").toString();
-        QDateTime dateTime = QDateTime::fromString(dateStr, "yyyy-MM-dd HH:mm:ss");
+        QDateTime dateTime = QDateTime::fromString(dateStr, Qt::ISODate);
         ui->DateTimeSelected->setDateTime(dateTime);
 
         int amount = query.value("amount").toInt();
@@ -86,12 +89,13 @@ void FormDialog::loadTransactionData(int transactionId) {
         QString description = query.value("description").toString();
         ui->DescriptionText->setText(description);
 
-        int categoryId = query.value("category").toInt();
-        int accountId = query.value("account").toInt();
+        int categoryId = query.value("category_id").toInt();
+        int accountId = query.value("account_id").toInt();
 
         QSqlQuery typeQuery(db);
-        typeQuery.prepare("SELECT type FROM categories WHERE id = :id");
+        typeQuery.prepare("SELECT type FROM categories WHERE id = :id AND user_id = :user_id");
         typeQuery.bindValue(":id", categoryId);
+        typeQuery.bindValue(":user_id", user_id);
         if (typeQuery.exec() && typeQuery.next()) {
             QString type = typeQuery.value("type").toString();
             if (type == "income") {
@@ -160,15 +164,15 @@ QString FormDialog::getDescription() const {
 
 void FormDialog::updateComboText(){
     if(ui->IncomeRadioButton->isChecked()){
-        categoryModel->setFilter("type == 'income'");
+        categoryModel->setFilter(QString("type = 'income'AND user_id = '%1'").arg(user_id));
     }else{
-        categoryModel->setFilter("type == 'expense'");
+        categoryModel->setFilter(QString("type = 'expense'AND user_id = '%1'").arg(user_id));
     }
 
     categoryModel->select();
 
     ui->ListCategoryDialog->setModel(categoryModel);
-    ui->ListCategoryDialog->setModelColumn(1);
+    ui->ListCategoryDialog->setModelColumn(2);
 }
 
 void FormDialog::initView(){
@@ -179,20 +183,23 @@ void FormDialog::initView(){
     }
 
     categoryModel->select();
+
     updateComboText();
 
     accountModel->select();
     ui->ListAccountDialog->setModel(accountModel);
-    ui->ListAccountDialog->setModelColumn(1);
+    ui->ListAccountDialog->setModelColumn(2);
 }
 
 bool FormDialog::insertTransaction() {
     int categoryRow = ui->ListCategoryDialog->currentIndex();
     int categoryId = categoryModel->index(categoryRow, 0).data().toInt();
+    qDebug()<<"[insertTransaction] categoryId antes del push es "<<categoryId;
     
     int accountRow = ui->ListAccountDialog->currentIndex();
     int accountId = accountModel->index(accountRow, 0).data().toInt();
-    
+    qDebug()<<"[insertTransaction] accountId antes del push  es "<<accountId;
+
     QString date = ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
     int amount = ui->InputAmountText->text().toDouble();
     QString description = ui->DescriptionText->text();
@@ -201,15 +208,15 @@ bool FormDialog::insertTransaction() {
 
     if (editingTransactionId != -1) {
         query.prepare("UPDATE money_transactions "
-                      "SET date = :date, amount = :amount, category = :category, "
-                      "account = :account, description = :description "
+                      "SET user_id = :user_id, date = :date, amount = :amount, category_id = :category, "
+                      "account_id = :account, description = :description "
                       "WHERE id = :id");
         query.bindValue(":id", editingTransactionId);
     } else {
-        query.prepare("INSERT INTO money_transactions (date, amount, category, account, description) "
-                      "VALUES (:date, :amount, :category, :account, :description)");
+        query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
+                      "VALUES (:user_id, :date, :amount, :category, :account, :description)");
     }
-    
+    query.bindValue(":user_id", user_id);
     query.bindValue(":date", date);
     query.bindValue(":amount", amount);
     query.bindValue(":category", categoryId);

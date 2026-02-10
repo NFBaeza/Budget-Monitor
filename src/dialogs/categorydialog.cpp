@@ -1,6 +1,8 @@
 #include "dialogs/categorydialog.h"
 #include "./ui_categorydialog.h"
 
+extern QString user_id;
+
 CategoryDialog::CategoryDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::CategoryDialog)
@@ -42,13 +44,13 @@ void CategoryDialog::initView() {
     accountModel->select();
 
     ui->listIncomeView->setModel(incomeModel);
-    ui->listIncomeView->setModelColumn(1);
+    ui->listIncomeView->setModelColumn(2);
 
     ui->listExpenseView->setModel(expenseModel);
-    ui->listExpenseView->setModelColumn(1);
+    ui->listExpenseView->setModelColumn(2);
 
     ui->listAccountView->setModel(accountModel);
-    ui->listAccountView->setModelColumn(1);
+    ui->listAccountView->setModelColumn(2);
 }
 
 void CategoryDialog::loadCategories() {
@@ -84,7 +86,7 @@ void CategoryDialog::onDeleteIncomeClicked() {
 
     int row = currentIndex.row();
     int id = incomeModel->index(row, 0).data().toInt();
-    QString categoryName = incomeModel->index(row, 1).data().toString();
+    QString categoryName = incomeModel->index(row, 2).data().toString();
 
     QMessageBox::StandardButton reply = QMessageBox::question(
         this, "Confirm Delete",
@@ -234,7 +236,8 @@ void CategoryDialog::onAccountDoubleClicked(const QModelIndex &index) {
 
 bool CategoryDialog::addCategory(const QString &categoryName, const QString &type) {
     QSqlQuery query(db);
-    query.prepare("INSERT INTO categories (category, type) VALUES (:category, :type)");
+    query.prepare("INSERT INTO categories (user_id, name, type) VALUES (:user_id, :category, :type)");
+    query.bindValue(":user_id", user_id);
     query.bindValue(":category", categoryName);
     query.bindValue(":type", type);
 
@@ -249,7 +252,7 @@ bool CategoryDialog::addCategory(const QString &categoryName, const QString &typ
 
 bool CategoryDialog::updateCategory(int id, const QString &newName) {
     QSqlQuery query(db);
-    query.prepare("UPDATE categories SET category = :category WHERE id = :id");
+    query.prepare("UPDATE categories SET name = :category WHERE id = :id");
     query.bindValue(":category", newName);
     query.bindValue(":id", id);
 
@@ -278,8 +281,9 @@ bool CategoryDialog::deleteCategory(int id) {
 
 bool CategoryDialog::addAccount(const QString &accountName) {
     QSqlQuery query(db);
-    query.prepare("INSERT INTO payment_methods (method) VALUES (:method)");
+    query.prepare("INSERT INTO accounts (user_id, name) VALUES (:user, :method)");
     query.bindValue(":method", accountName);
+    query.bindValue(":user", user_id);
 
     if (!query.exec()) {
         qDebug() << "[addAccount] ERROR:" << query.lastError().text();
@@ -292,7 +296,7 @@ bool CategoryDialog::addAccount(const QString &accountName) {
 
 bool CategoryDialog::updateAccount(int id, const QString &newName) {
     QSqlQuery query(db);
-    query.prepare("UPDATE payment_methods SET method = :method WHERE id = :id");
+    query.prepare("UPDATE accounts SET name = :method WHERE id = :id");
     query.bindValue(":method", newName);
     query.bindValue(":id", id);
 
@@ -307,7 +311,7 @@ bool CategoryDialog::updateAccount(int id, const QString &newName) {
 
 bool CategoryDialog::deleteAccount(int id) {
     QSqlQuery query(db);
-    query.prepare("DELETE FROM payment_methods WHERE id = :id");
+    query.prepare("DELETE FROM accounts WHERE id = :id");
     query.bindValue(":id", id);
 
     if (!query.exec()) {

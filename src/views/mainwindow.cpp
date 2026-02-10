@@ -4,6 +4,7 @@
 #include "widgets/savingwidget.h"
 #include "dialogs/monthselectordialog.h"
 
+extern const QString user_id = "68e6ff6b-9189-48be-a84b-03a5448e0b8b";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

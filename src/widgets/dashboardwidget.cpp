@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <QCoreApplication>
 
+extern QString user_id;
 
 MonthView::MonthView(QDate date_selected, QWidget *parent) :
     QWidget(parent),
@@ -91,8 +92,8 @@ void MonthView::onTableRowDoubleClicked(const QModelIndex &index) {
 
 void  MonthView::updateTransactions(){
     transactionModel->setFilter(MonthFilter);
-    if(!transactionModel->select()){return;};
-
+    if(!transactionModel->select()){qDebug()<<"[updateTransactions] error:" << transactionModel->lastError().text();return;};
+    
     // Solo configurar el modelo y delegate una vez
     if (ui->TableViewLastEntry->model() != transactionModel) {
         ui->TableViewLastEntry->setModel(transactionModel);
@@ -102,6 +103,9 @@ void  MonthView::updateTransactions(){
     ui->TableViewLastEntry->resizeColumnsToContents();
     ui->TableViewLastEntry->horizontalHeader()->setStretchLastSection(true);
     ui->TableViewLastEntry->setColumnHidden(0,true);
+    ui->TableViewLastEntry->setColumnHidden(1,true);
+    ui->TableViewLastEntry->setColumnHidden(7,true);
+    ui->TableViewLastEntry->setColumnHidden(8,true);
 }
 
 void  MonthView::updateCategories(){
@@ -139,29 +143,28 @@ void MonthView::onAddButtonClicked() {
 void  MonthView::setAmountByCategory() {
     for (int i = 0; i < categoryModel->rowCount(); ++i) {
         QString category_idx  = categoryModel->index(i,0).data().toString();
-        QString category_name = categoryModel->index(i,1).data().toString();
+        QString category_name = categoryModel->index(i,2).data().toString();
         if (!category_name.isEmpty()) {
             category_name[0] = category_name[0].toUpper();
         } 
 
-        QString filter = QString("%1 AND money_transactions.category = '%2'").arg(MonthFilter).arg(category_idx);
+        QString filter = QString("%1 AND money_transactions.category_id = '%2' AND money_transactions.user_id = '%3'").arg(MonthFilter).arg(category_idx).arg(user_id);
         transactionModel->setFilter(filter);
 
         if(transactionModel->select()){
             for(int j = 0; j < transactionModel->rowCount(); j++){
-                int amount = transactionModel->data(transactionModel->index(j, 2)).toInt();
+                int amount = transactionModel->data(transactionModel->index(j, 3)).toInt();
                 amountByCategoryMap[category_name.toLower()] += amount; 
             }
         }
     }
-    
     transactionModel->setFilter(MonthFilter);
     transactionModel->select();
 }
 
 QString MonthView::getTypeFromCategory(const QString& category) {
     for (int i = 0; i < incomesModel->rowCount(); ++i) {
-        if (incomesModel->record(i).value("category").toString().toLower() == category) {
+        if (incomesModel->record(i).value("name").toString().toLower() == category) {
             return incomesModel->record(i).value("type").toString();
         }
     }
@@ -190,7 +193,7 @@ QWidget* MonthView::findWidgetByTexto(QLayout *layout, const QString &textoBusca
 void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix) {
     for (int i = 0; i < model->rowCount(); ++i) {
         QString objectCategory = QString("%1%2").arg(labelPrefix).arg(i + 1);
-        QString categoryName = model->index(i, 1).data().toString();
+        QString categoryName = model->index(i, 2).data().toString();
         QLabel *label = this->findChild<QLabel*>(objectCategory);
 
         if (label) {
@@ -212,8 +215,8 @@ void MonthView::updateSummary(){
     totalIncomes = 0.0;
     totalExpenses = 0.0;
 
-    for (const auto& [categoria, monto] : amountByCategoryMap.asKeyValueRange()) {
-        QString tipo = getTypeFromCategory(categoria.toLower());
+    for (const auto& [category, monto] : amountByCategoryMap.asKeyValueRange()) {
+        QString tipo = getTypeFromCategory(category.toLower());
         if(tipo == "expense"){
             totalExpenses += monto;
         }else{
@@ -239,7 +242,7 @@ void MonthView::updatePieChart() {
     }
 
     if (totalIncomes > totalExpenses) {
-        QPieSlice *slice = series->append("Disponible", savings);
+        QPieSlice *slice = series->append("Available balance", savings);
         slice->setBrush(Qt::lightGray);
     }
 
@@ -272,11 +275,11 @@ void MonthView::updatePieChart() {
 
 void MonthView::updateAmountView(QSqlTableModel *model, QLayout* layout) {
     for (int i = 0; i < model->rowCount(); ++i) {
-        QString category_name = model->index(i,1).data().toString();
+        QString category_name = model->index(i,2).data().toString();
         if (category_name.isEmpty()) continue;
 
         category_name[0] = category_name[0].toUpper();
-        QWidget* name_widget = findWidgetByTexto(layout, category_name);
+        QWidget* name_widget = findWidgetByTexto(layout,category_name);
 
         if (name_widget) {;
             QString widget_id = QString("%1Amount").arg(name_widget->objectName());
@@ -301,8 +304,8 @@ void MonthView::initView(){
     QString firstDate = QDate(dateViewSelected.year(), dateViewSelected.month(), 1).toString("yyyy-MM-dd");
     QString lastDate = QDate(dateViewSelected.year(), dateViewSelected.month(), dateViewSelected.daysInMonth()).toString("yyyy-MM-dd");
 
-    MonthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2'").arg(firstDate).arg(lastDate);
-    
+    MonthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2' AND money_transactions.user_id = '%3'").arg(firstDate).arg(lastDate).arg(user_id);
+
     updateTransactions();
     updateLabelsFromFilter(incomesModel, "Income");
     updateLabelsFromFilter(expensesModel, "Expense");

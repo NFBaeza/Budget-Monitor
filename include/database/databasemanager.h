@@ -9,6 +9,7 @@
 #include <QObject>
 #include <memory>
 #include <QString>
+#include <QMap>
 
 class DatabaseManager : public QObject {
     Q_OBJECT
@@ -46,6 +47,7 @@ private:
     void setupCategoryModel(QSqlTableModel *model);
     void setupAccountModel(QSqlTableModel *model);
     void setupTransactionsModel(QSqlRelationalTableModel *model);
+    static QMap<QString, QString> loadEnvFile();
 };
 
 #endif // DATABASEMANAGER_H
