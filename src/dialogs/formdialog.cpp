@@ -134,6 +134,37 @@ void FormDialog::loadTransactionData(int transactionId) {
     }
 }
 
+
+void FormDialog::updateComboText(){
+    if(ui->IncomeRadioButton->isChecked()){
+        categoryModel->setFilter(QString("type = 'income'AND user_id = '%1'").arg(user_id));
+    }else{
+        categoryModel->setFilter(QString("type = 'expense'AND user_id = '%1'").arg(user_id));
+    }
+
+    categoryModel->select();
+
+    ui->ListCategoryDialog->setModel(categoryModel);
+    ui->ListCategoryDialog->setModelColumn(2);
+}
+
+void FormDialog::initView(){
+    if(editingTransactionId >= 0){
+        ui->TitleFormDialog->setText("Edit Transaction");
+    }else{
+        ui->TitleFormDialog->setText("Add new data");
+    }
+
+    categoryModel->select();
+    updateComboText();
+
+    accountModel->select();
+    ui->ListAccountDialog->setModel(accountModel);
+    ui->ListAccountDialog->setModelColumn(2);
+}
+
+// ==================== OK / CANCEL ====================
+
 void FormDialog::onAcceptClicked() {
     if (ui->InputAmountText->text().isEmpty() || ui->DateTimeSelected->text().isEmpty()) {
         QMessageBox::warning(this, "Error", "Please fill all the options");
@@ -147,17 +178,20 @@ void FormDialog::onAcceptClicked() {
     int accountId = accountModel->index(accountRow, 0).data().toInt();
 
     QString date = ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
+    
     int amount = ui->InputAmountText->text().toDouble();
+    
     QString description = ui->DescriptionText->text();
 
     setButtonsEnabled(false);
+    
     auto *worker = DatabaseManager::instance().worker();
 
     QString opName = (editingTransactionId != -1) ? "updateTransaction" : "insertTransaction";
 
     connect(worker, &DatabaseWorker::operationFinished, this, [this, opName](const QString &op) {
         if (op == opName) {
-            emit dataInserted();
+            op == "updateTransaction" ? emit dataUpdated() :  emit dataInserted();
             accept();
         }
     }, Qt::SingleShotConnection);
@@ -191,53 +225,4 @@ void FormDialog::onAcceptClicked() {
 
 void FormDialog::onCancelClicked() {
     reject();
-}
-
-QString FormDialog::getAmount() const {
-    return ui->InputAmountText->text();
-}
-
-QString FormDialog::getDate() const {
-    return ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
-}
-
-QString FormDialog::getCategory() const {
-    return ui->ListCategoryDialog->currentText();
-}
-
-QString FormDialog::getAcount() const {
-    return ui->ListAccountDialog->currentText();
-}
-
-QString FormDialog::getDescription() const {
-    return ui->DescriptionText->text();
-}
-
-void FormDialog::updateComboText(){
-    if(ui->IncomeRadioButton->isChecked()){
-        categoryModel->setFilter(QString("type = 'income'AND user_id = '%1'").arg(user_id));
-    }else{
-        categoryModel->setFilter(QString("type = 'expense'AND user_id = '%1'").arg(user_id));
-    }
-
-    categoryModel->select();
-
-    ui->ListCategoryDialog->setModel(categoryModel);
-    ui->ListCategoryDialog->setModelColumn(2);
-}
-
-void FormDialog::initView(){
-    if(editingTransactionId >= 0){
-        ui->TitleFormDialog->setText("Edit Transaction");
-    }else{
-        ui->TitleFormDialog->setText("Add new data");
-    }
-
-    categoryModel->select();
-
-    updateComboText();
-
-    accountModel->select();
-    ui->ListAccountDialog->setModel(accountModel);
-    ui->ListAccountDialog->setModelColumn(2);
 }

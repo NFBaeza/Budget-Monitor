@@ -85,6 +85,7 @@ void AddingFileDialog::onAcceptClicked() {
 
     connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
         if (op == "bulkImport") {
+            emit dataInserted();
             accept();
         }
     }, Qt::SingleShotConnection);

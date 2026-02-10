@@ -29,7 +29,8 @@ public:
     explicit AddingFileDialog(QWidget *parent = nullptr);
     ~AddingFileDialog();
 
-private slots:
+signals:
+    void dataInserted(); 
 
 private:
     Ui::AddingFileDialog *ui;
@@ -40,7 +41,6 @@ private:
 
     void onCancelClicked();
     void onAcceptClicked();
-
 };
 
 #endif
