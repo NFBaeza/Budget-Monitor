@@ -4,7 +4,10 @@
 #include <QSqlRecord>
 #include <QSqlRelation>
 #include <QDebug>
+#include <QFile>
+#include <QCoreApplication>
 
+extern QString user_id;
 // Singleton thread-safe 
 DatabaseManager& DatabaseManager::instance() {
     static DatabaseManager instance;
@@ -15,13 +18,36 @@ DatabaseManager::DatabaseManager() {
     if (QSqlDatabase::contains("qt_sql_default_connection")) {
         db = QSqlDatabase::database("qt_sql_default_connection");
     } else {
-        db = QSqlDatabase::addDatabase("QSQLITE");
-        db.setDatabaseName("budget_monitor.db");
-        
+        QMap<QString, QString> env = loadEnvFile();
+        db = QSqlDatabase::addDatabase("QPSQL");
+        db.setHostName(env.value("DB_HOST"));
+        db.setPort(env.value("DB_PORT").toInt());
+        db.setDatabaseName(env.value("DB_NAME"));
+        db.setUserName(env.value("DB_USER"));
+        db.setPassword(env.value("DB_PASSWORD"));
+
         if (!db.open()) {
             qCritical() << "Error al abrir la base de datos:" << db.lastError().text();
         }
     }
+}
+
+QMap<QString, QString> DatabaseManager::loadEnvFile() {
+    QMap<QString, QString> env;
+    QFile file(QCoreApplication::applicationDirPath() + "/../.env");
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << ".env file not found:" << file.fileName();
+        return env;
+    }
+    while (!file.atEnd()) {
+        QString line = file.readLine().trimmed();
+        if (line.isEmpty() || line.startsWith('#')) continue;
+        int sep = line.indexOf('=');
+        if (sep > 0) {
+            env.insert(line.left(sep), line.mid(sep + 1));
+        }
+    }
+    return env;
 }
 
 QSqlTableModel* DatabaseManager::getCategoryModel(QObject *parent) {
@@ -39,7 +65,7 @@ QSqlTableModel* DatabaseManager::getAccountModel(QObject *parent) {
 QSqlTableModel* DatabaseManager::getIncomeModel(QObject *parent) {
     auto model = new QSqlTableModel(parent, db);
     model->setTable("categories");
-    model->setFilter("type = 'income'");
+    model->setFilter(QString("type = 'income' AND user_id = '%1'").arg(user_id));
     model->select();
     return model;
 }
@@ -47,7 +73,7 @@ QSqlTableModel* DatabaseManager::getIncomeModel(QObject *parent) {
 QSqlTableModel* DatabaseManager::getExpenseModel(QObject *parent) {
     auto model = new QSqlTableModel(parent, db);
     model->setTable("categories");
-    model->setFilter("type = 'expense'");
+    model->setFilter(QString("type = 'expense' AND user_id = '%1'").arg(user_id));
     model->select();
     return model;
 }
@@ -60,19 +86,22 @@ QSqlRelationalTableModel* DatabaseManager::getTransactionsModel(QObject *parent)
 
 void DatabaseManager::setupCategoryModel(QSqlTableModel *model) {
     model->setTable("categories");
+    model->setFilter(QString("user_id = '%1'").arg(user_id));
     model->select();
 }
 
 void DatabaseManager::setupAccountModel(QSqlTableModel *model) {
-    model->setTable("payment_methods");
+    model->setTable("accounts");
+    model->setFilter(QString("user_id = '%1'").arg(user_id));
     model->select();
 }
 
 void DatabaseManager::setupTransactionsModel(QSqlRelationalTableModel *model) {
     model->setTable("money_transactions");
     model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    model->setRelation(3, QSqlRelation("categories", "id", "category"));
-    model->setRelation(4, QSqlRelation("payment_methods", "id", "method"));
+    model->setRelation(4, QSqlRelation("categories", "id", "name"));
+    model->setRelation(5, QSqlRelation("accounts", "id", "name"));
+    model->setFilter(QString("user_id = '%1'").arg(user_id));
     model->select();
 }
 
