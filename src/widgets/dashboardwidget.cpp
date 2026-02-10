@@ -60,20 +60,15 @@ void MonthView::onEditButtonCliked() {
 
     connect(&dialog, &CategoryDialog::dataUpdated, this, [this]() {
         qDebug() << "[OnEditButtonCliked] Categories Updated, refreshing...";
-        updateCategories();
+        updateAllViews();
     });
 
-    if (dialog.exec() == QDialog::Accepted) {
-        qDebug() << "[OnEditButtonCliked] Categories edited, refreshing...";
-        
-        updateAllViews();
-    }
+    dialog.exec();
 }
 
 void MonthView::onTableRowDoubleClicked(const QModelIndex &index) {
     int row = index.row();
-
-    // Get transaction ID (hidden column 0)
+    
     int transactionId = transactionModel->data(
         transactionModel->index(row, 0)).toInt();
 
@@ -81,13 +76,12 @@ void MonthView::onTableRowDoubleClicked(const QModelIndex &index) {
 
     connect(&dialog, &FormDialog::dataDeleted, this, [this]() {
         qDebug() << "[OnTableRowDoubleClicked] Transaction deleted, refreshing...";
-        updateAllViews();
     });
 
     if (dialog.exec() == QDialog::Accepted) {
         qDebug() << "[onTableRowDoubleClicked] Transaction edited, refreshing...";
-    updateAllViews();
     }
+    updateAllViews();
 }
 
 void  MonthView::updateTransactions(){
@@ -119,9 +113,12 @@ void  MonthView::updateCategories(){
 void MonthView::updateAllViews(){
     updateTransactions();
     amountByCategoryMap.clear();
-    setAmountByCategory();
+
     updateLabelsFromFilter(incomesModel, "Income");
     updateLabelsFromFilter(expensesModel, "Expense");
+
+    setAmountByCategory();
+
     updateAmountView(incomesModel, ui->IncomesLayout); 
     updateAmountView(expensesModel, ui->ExpensesLayout);
     updateSummary();
@@ -191,24 +188,41 @@ QWidget* MonthView::findWidgetByTexto(QLayout *layout, const QString &textoBusca
 
 
 void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix) {
-    for (int i = 0; i < model->rowCount(); ++i) {
-        QString objectCategory = QString("%1%2").arg(labelPrefix).arg(i + 1);
-        QString categoryName = model->index(i, 2).data().toString();
-        QLabel *label = this->findChild<QLabel*>(objectCategory);
-
+    const int maxLabels = 5;
+    for (int i = 0; i < maxLabels; ++i) {
+        QString objectName = QString("%1%2").arg(labelPrefix).arg(i + 1);
+        QLabel *label = this->findChild<QLabel*>(objectName);
         if (label) {
-            if (!categoryName.isEmpty()) {
-                categoryName[0] = categoryName[0].toUpper();
-            }
-            label->setText(categoryName);
-            label->setVisible(true);
-        } else {
-            qDebug() << "[updateLabelsFromFilter] Label not found:" << objectCategory;
+            label->setText("");
+            label->setVisible(false);
+        }
+        QLabel *amountLabel = this->findChild<QLabel*>(objectName + "Amount");
+        if (amountLabel) {
+            amountLabel->setText("0");
+            amountLabel->setVisible(false);
         }
     }
 
-    this->update();
-    this->repaint();
+    qDebug()<<"[updateLabelsFromFilter]cantidad de categorias: "<< model->rowCount();
+    for (int i = 0; i < model->rowCount() && i < maxLabels; ++i) {
+        QString objectName = QString("%1%2").arg(labelPrefix).arg(i + 1);
+        qDebug()<<"[updateLabelsFromFilter] nombre objevto: "<< objectName;
+        QString categoryName = model->index(i, 2).data().toString();
+        qDebug()<<"[updateLabelsFromFilter] categorias: "<< categoryName;
+        QLabel *nameLabel = this->findChild<QLabel*>(objectName);
+        QLabel *amountLabel = this->findChild<QLabel*>(objectName + "Amount");
+
+        if (nameLabel && amountLabel) {
+            if (!categoryName.isEmpty()) {
+                categoryName[0] = categoryName[0].toUpper();
+            }
+            nameLabel->setText(categoryName);
+            nameLabel->setVisible(true);
+            amountLabel->setVisible(true);
+        } else {
+            qDebug() << "[updateLabelsFromFilter] Label not found:" << objectName;
+        }
+    }
 }
 
 void MonthView::updateSummary(){
@@ -283,11 +297,12 @@ void MonthView::updateAmountView(QSqlTableModel *model, QLayout* layout) {
 
         if (name_widget) {;
             QString widget_id = QString("%1Amount").arg(name_widget->objectName());
-            QLabel* label_monto = this->findChild<QLabel*>(widget_id);
+            QLabel* label_amount = this->findChild<QLabel*>(widget_id);
 
-            if (label_monto) {
-                label_monto->setText(QString::number(amountByCategoryMap[category_name.toLower()]));
-                label_monto->repaint();
+            if (label_amount) {
+                label_amount->setText(QString::number(amountByCategoryMap[category_name.toLower()]));
+                label_amount->setVisible(true);
+                label_amount->repaint();
             } else {
                 qDebug() << "[updateAmountView] Amount label not found with ID:" << widget_id;
             }

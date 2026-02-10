@@ -53,7 +53,6 @@ private slots:
 
 private:
     Ui::CategoryDialog *ui;
-    QSqlDatabase& db = DatabaseManager::instance().getDatabase();
 
     QSqlTableModel *incomeModel{nullptr};
     QSqlTableModel *expenseModel{nullptr};
@@ -62,14 +61,7 @@ private:
     void initView();
     void loadCategories();
     void loadAccounts();
-
-    bool addCategory(const QString &categoryName, const QString &type);
-    bool updateCategory(int id, const QString &newName);
-    bool deleteCategory(int id);
-
-    bool addAccount(const QString &accountName);
-    bool updateAccount(int id, const QString &newName);
-    bool deleteAccount(int id);
+    void setButtonsEnabled(bool enabled);
 };
 
 #endif

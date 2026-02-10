@@ -1,4 +1,5 @@
 #include "dialogs/addingfiledialog.h"
+#include "database/databaseworker.h"
 #include "./ui_addingfiledialog.h"
 
 extern QString user_id;
@@ -23,92 +24,15 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
         }
     });
 
-    ui->filePathLineEdit->setReadOnly(true); 
+    ui->filePathLineEdit->setReadOnly(true);
     ui->filePathLineEdit->setPlaceholderText("Select a file ...");
-       
+
     ui->accountComboBox->setModel(accountModel);
     ui->accountComboBox->setModelColumn(2);
 }
 
 AddingFileDialog::~AddingFileDialog() {
     delete ui;
-}
-
-bool AddingFileDialog::uploadDataToDataBase(std::unique_ptr<Bank>& bank){
-    if(bank->transactions.empty()){
-        bank->readBankMovements();
-    }
-    if(bank->transactions.empty()){
-        qDebug() << "[uploadDataToDataBase] No transactions to upload";
-        return false;
-    }
-
-    for(auto& t : bank->transactions){
-        QSqlQuery categoryQuery;
-        categoryQuery.prepare("SELECT id FROM categories WHERE name = :category");
-        categoryQuery.bindValue(":category", t.category);
-        
-        if (!categoryQuery.exec()) {
-            qDebug() << "[uploadDataToDataBase] Error SELECT category:" << categoryQuery.lastError().text();
-            return false;
-        }
-        
-        int categoryId;
-        if (!categoryQuery.next()) {
-            QSqlQuery insertCat;
-            insertCat.prepare("INSERT INTO categories (user_id, name, type) VALUES (:user, :category, :type)");
-            insertCat.bindValue(":category", t.category);
-            insertCat.bindValue(":type", (t.category.toLower() == "Abono") ? "income" : "expense");
-            insertCat.bindValue(":user", user_id);
-            if (!insertCat.exec()) {
-                qDebug() << "[uploadDataToDataBase] Error INSERT category:" << insertCat.lastError().text();
-                return false;
-            }
-            categoryId = insertCat.lastInsertId().toInt();
-        } else {
-            categoryId = categoryQuery.value(0).toInt();
-        }
-
-       
-        QSqlQuery accountQuery;
-        accountQuery.prepare("SELECT id FROM accounts WHERE name = :account"); 
-        accountQuery.bindValue(":account", t.account);
-        if (!accountQuery.exec()) {
-            qDebug() << "Error SELECT account:" << accountQuery.lastError().text();
-            return false;
-        }
-        
-        int accountId;
-        if (!accountQuery.next()) {
-            QSqlQuery insertAcc;
-            insertAcc.prepare("INSERT INTO accounts (name) VALUES (:method)");
-            insertAcc.bindValue(":method", t.account);
-            if (!insertAcc.exec()) {
-                qDebug() << "[uploadDataToDataBase] Error INSERT account:" << insertAcc.lastError().text();
-                return false;
-            }
-            accountId = insertAcc.lastInsertId().toInt();
-        } else {
-            accountId = accountQuery.value(0).toInt();
-        }
-
-        QSqlQuery insertQuery;
-        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
-                            "VALUES (:user, :date, :amount, :category, :account, :description)");
-        insertQuery.bindValue(":user", user_id);
-        insertQuery.bindValue(":date", t.date);
-        insertQuery.bindValue(":amount", t.amount);
-        insertQuery.bindValue(":category", categoryId);
-        insertQuery.bindValue(":account", accountId);
-        insertQuery.bindValue(":description", t.description);
-        
-        if (!insertQuery.exec()) {
-            qDebug() << "[uploadDataToDataBase] Error INSERT transaction:" << insertQuery.lastError().text();
-            return false;
-        }
-    }
-    
-    return true;
 }
 
 void AddingFileDialog::onAcceptClicked() {
@@ -132,13 +56,51 @@ void AddingFileDialog::onAcceptClicked() {
     }
 
     bank->filePath = filePath;
-    if (uploadDataToDataBase(bank)) {
-        qDebug() << "------------------------";
-        accept();
+    bank->readBankMovements();
+
+    if (bank->transactions.empty()) {
+        QMessageBox::warning(this, "Error", "No transactions found in file");
+        return;
     }
+
+    // Convert transactions to QVariantList for the worker
+    QVariantList txList;
+    for (const auto &t : bank->transactions) {
+        QVariantMap m;
+        m["date"] = t.date;
+        m["amount"] = t.amount;
+        m["category"] = t.category;
+        m["account"] = t.account;
+        m["description"] = t.description;
+        txList.append(m);
+    }
+
+    ui->buttonBox->setEnabled(false);
+
+    auto *worker = DatabaseManager::instance().worker();
+
+    connect(worker, &DatabaseWorker::bulkImportProgress, this, [](int current, int total) {
+        qDebug() << "[BulkImport] Progress:" << current << "/" << total;
+    });
+
+    connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
+        if (op == "bulkImport") {
+            accept();
+        }
+    }, Qt::SingleShotConnection);
+
+    connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
+        if (op == "bulkImport") {
+            QMessageBox::critical(this, "Error", "Import failed: " + err);
+            ui->buttonBox->setEnabled(true);
+        }
+    }, Qt::SingleShotConnection);
+
+    QMetaObject::invokeMethod(worker, "bulkImportTransactions", Qt::QueuedConnection,
+                              Q_ARG(QString, user_id),
+                              Q_ARG(QVariantList, txList));
 }
 
 void AddingFileDialog::onCancelClicked() {
     reject();
 }
-

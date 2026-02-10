@@ -1,4 +1,5 @@
 #include "database/databasemanager.h"
+#include "database/databaseworker.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QSqlRecord>
@@ -30,6 +31,20 @@ DatabaseManager::DatabaseManager() {
             qCritical() << "Error al abrir la base de datos:" << db.lastError().text();
         }
     }
+
+    // Set up worker thread for async DB operations
+    m_worker = new DatabaseWorker();
+    m_worker->moveToThread(&m_workerThread);
+
+    connect(&m_workerThread, &QThread::started, m_worker, &DatabaseWorker::initConnection);
+    connect(&m_workerThread, &QThread::finished, m_worker, &QObject::deleteLater);
+
+    m_workerThread.start();
+}
+
+DatabaseManager::~DatabaseManager() {
+    m_workerThread.quit();
+    m_workerThread.wait();
 }
 
 QMap<QString, QString> DatabaseManager::loadEnvFile() {
@@ -147,4 +162,8 @@ bool DatabaseManager::executeQuery(const QString &query) {
 
 QSqlDatabase& DatabaseManager::getDatabase() {
     return db;
+}
+
+DatabaseWorker* DatabaseManager::worker() const {
+    return m_worker;
 }
