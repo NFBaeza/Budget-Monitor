@@ -19,6 +19,7 @@
 #include <QMap>
 #include <QLayout>
 #include <QSqlRecord>
+#include <QSqlQuery>
 
 
 namespace Ui { 
@@ -28,7 +29,7 @@ namespace Ui {
         int expenses=0;
         int incomes=0;
         int saving=0;
-        QDate date;
+        QString date;
     }; 
 }
 
@@ -60,7 +61,7 @@ private:
     std::vector<Ui::MONEY> money_by_month;
 
     void initView();
-    void getAmountByMonth(const QDate date);
+    void getAmountByMonth(const QString firstDate, const QString lastDate);
     void updateBarGraph();
     void updateSummary();
 

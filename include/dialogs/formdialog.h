@@ -27,15 +27,10 @@ public:
     explicit FormDialog(int transactionId, QWidget *parent = nullptr);
     ~FormDialog();
 
-    QString getDate() const;
-    QString getAmount() const;
-    QString getCategory() const;
-    QString getAcount() const;
-    QString getDescription() const;
-
 signals:
     void dataInserted(); 
     void dataDeleted();
+    void dataUpdated();
 
 private slots:
     void onAcceptClicked();

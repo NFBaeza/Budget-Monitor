@@ -36,23 +36,36 @@ void SavingView::backButtonWasPressed(){
     emit backbutton_was_pressed();
 }
 
-void SavingView::getAmountByMonth(const QDate date){
-    int number_of_transactions = transactionsModel->rowCount();
-    Ui::MONEY money_distrubition = {0,0,0};
+void SavingView::getAmountByMonth(const QString firstDate, const QString lastDate){
+    Ui::MONEY money_distrubition;
+    QSqlDatabase db = DatabaseManager::instance().getDatabase();
+    QSqlQuery query(db);
+    query.prepare("SELECT c.type, SUM(t.amount) "
+                  "FROM money_transactions t "
+                  "JOIN categories c ON t.category_id = c.id "
+                  "WHERE t.date >= :start AND t.date <= :end AND t.user_id = :user "
+                  "GROUP BY c.type");
 
-    for(int row = 0; row < number_of_transactions; row++){
-        QString category_from_row = transactionsModel->record(row).value("category_id").toString();
-        int amount_from_row = transactionsModel->record(row).value("amount").toInt();
-        categoryModel->setFilter(QString("name == '%1'").arg(category_from_row));
-        categoryModel->select();
-        if(categoryModel->record(0).value("type").toString() == "expense"){
-            money_distrubition.expenses+=amount_from_row;
-        }else{
-            money_distrubition.incomes+=amount_from_row;
+    query.bindValue(":start", firstDate);
+    query.bindValue(":end", lastDate);
+    query.bindValue(":user", user_id);
+
+    if (query.exec()) {
+        while (query.next()) {
+            QString type = query.value(0).toString().toLower();
+            int total = query.value(1).toInt();
+            if(type == "expense"){
+                money_distrubition.expenses = total;
+            } else{
+                money_distrubition.incomes = total;
+            }
         }
+    } else {
+        qDebug() << "[setAmountByCategory] ERROR:" << query.lastError().text();
     }
+
     money_distrubition.saving = money_distrubition.incomes - money_distrubition.expenses;
-    money_distrubition.date =  date;
+    money_distrubition.date = firstDate;
     money_by_month.emplace_back(money_distrubition);
 }
 
@@ -92,12 +105,13 @@ void SavingView::updateSummary(){
 void SavingView::updateBarGraph(){
     QBarSet *savingsSet = new QBarSet("Savings");
     //QBarSet *expensesSet = new QBarSet("Expenses");
-    QStringList categories;
+    QStringList monthsList;
 
     for (auto it = money_by_month.rbegin(); it != money_by_month.rend(); ++it) {
         *savingsSet << it->saving;
         //*expensesSet << it->expenses;
-        categories << it->date.toString("MMM yy");
+        qDebug()<<"[updateBarGraph] fecha"<< it->date;
+        monthsList << QDate::fromString(it->date, "yyyy-MM-dd").toString("MM/yy");
     }
 
     QBarSeries *series = new QBarSeries();
@@ -111,7 +125,7 @@ void SavingView::updateBarGraph(){
     chart->setAnimationOptions(QChart::SeriesAnimations);
 
     QBarCategoryAxis *axisX = new QBarCategoryAxis();
-    axisX->append(categories);
+    axisX->append(monthsList);
     chart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
 
@@ -133,10 +147,9 @@ void SavingView::initView() {
         QString firstDate = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");
         QString lastDate = QDate(initDate.year(), initDate.month(), initDate.daysInMonth()).toString("yyyy-MM-dd");
         
-        monthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2' AND money_transactions.user_id = '%3'").arg(firstDate).arg(lastDate).arg(user_id);   
-        transactionsModel->setFilter(monthFilter);
         transactionsModel->select();
-        getAmountByMonth(QDate::fromString(firstDate, "yyyy-MM-dd"));
+
+        getAmountByMonth(firstDate, lastDate);
 
         initDate = initDate.addMonths(-1);
     }

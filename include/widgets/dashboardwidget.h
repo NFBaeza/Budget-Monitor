@@ -56,14 +56,12 @@ private:
     void updateTransactions();
     void initView();
     void updatePieChart();
-    void updateAmountView(QSqlTableModel *model, QLayout* layout);
     void updateSummary();
     void updateCategories();
-    void updateAllViews();
+    void updateView();
     void onAddFileButtonCliked();
-    
-    QWidget* findWidgetByTexto(QLayout *layout, const QString &textoBuscado);
-    QString getTypeFromCategory(const QString&  category);
+
+    QString getTypeFromCategory(const QString& category);
 };
 
 #endif
