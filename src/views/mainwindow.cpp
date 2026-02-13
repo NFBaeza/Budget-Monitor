@@ -12,7 +12,8 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setMinimumSize(500, 300);
+    setMinimumSize(380, 300);
+
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
