@@ -2,6 +2,7 @@
 #define SAVINGWIDGET_H
 
 #include "database/databasemanager.h"
+#include "widgets/monthreportwidget.h"
 #include <iostream>
 #include <QWidget>
 #include <QLabel>
@@ -38,6 +39,7 @@ class SavingView : public QWidget {
 
 public:
     explicit SavingView(QWidget *parent = nullptr);
+
     QDate dateViewSelected;
     QString month_name;
     QString monthFilter;
@@ -47,13 +49,15 @@ public:
     ~SavingView();
 
 signals:
-    void backbutton_was_pressed(); 
+    void backbutton_was_pressed();
+    void monthSelected(QDate date); 
 
 private slots:
     void backButtonWasPressed();
 
 private:
     Ui::SavingView *ui;
+
     QSqlTableModel *categoryModel{nullptr};
     QSqlTableModel *incomeModel{nullptr};
     QSqlTableModel *expenseModel{nullptr};
@@ -64,7 +68,6 @@ private:
     void getAmountByMonth(const QString firstDate, const QString lastDate);
     void updateBarGraph();
     void updateSummary();
-
 };
 
 #endif

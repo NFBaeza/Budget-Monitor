@@ -12,6 +12,7 @@ SavingView::SavingView(QWidget *parent)
       ui(new Ui::SavingView) {
 
     ui->setupUi(this);
+    this->setFixedSize(1080, 650);
 
     categoryModel = DatabaseManager::instance().getCategoryModel(this);
     transactionsModel = DatabaseManager::instance().getTransactionsModel(this);
@@ -20,12 +21,7 @@ SavingView::SavingView(QWidget *parent)
     
     connect(ui->backButton, &QPushButton::clicked, this, &SavingView::backButtonWasPressed);
     
-    QString fechaFormateada = QString("Current Date/Time:\n%1").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy  HH:mm"));
-    ui->labelCurrentTime->setText(fechaFormateada);
-    ui->labelMonth->setText("Savings Year Report");
-
     initView();
-
 }
 
 SavingView::~SavingView() {
@@ -110,8 +106,7 @@ void SavingView::updateBarGraph(){
     for (auto it = money_by_month.rbegin(); it != money_by_month.rend(); ++it) {
         *savingsSet << it->saving;
         //*expensesSet << it->expenses;
-        qDebug()<<"[updateBarGraph] fecha"<< it->date;
-        monthsList << QDate::fromString(it->date, "yyyy-MM-dd").toString("MM/yy");
+        monthsList << QDate::fromString(it->date, "yyyy-MM-dd").toString("MM-yy");
     }
 
     QBarSeries *series = new QBarSeries();
@@ -128,6 +123,7 @@ void SavingView::updateBarGraph(){
     axisX->append(monthsList);
     chart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
+    chart->setTheme(QChart::ChartThemeDark);
 
     QValueAxis *axisY = new QValueAxis();
     chart->addAxis(axisY, Qt::AlignLeft);
@@ -138,9 +134,20 @@ void SavingView::updateBarGraph(){
 
     ui->chartView->setChart(chart);
     ui->chartView->setRenderHint(QPainter::Antialiasing);
+
+    connect(series, &QBarSeries::doubleClicked, this, [this, axisX](int index, QBarSet *) {
+        QDate month = QDate::fromString("01-" + axisX->at(index), "dd-MM-yy", 2000);
+        emit monthSelected(month);
+    });
+
 }
 
+
 void SavingView::initView() {
+    
+    QString fechaFormateada = QString("Current Date/Time:\n%1").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy  HH:mm"));
+    ui->labelCurrentTime->setText(fechaFormateada);
+
     QDate initDate = QDate::currentDate();
     for(int i_month = 0; i_month < 12; i_month++){
 
