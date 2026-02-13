@@ -29,6 +29,7 @@ set(SOURCES
     src/views/mainwindow.cpp
     src/widgets/dashboardwidget.cpp
     src/widgets/savingwidget.cpp
+    src/widgets/monthreportwidget.cpp
     src/dialogs/formdialog.cpp
     src/dialogs/categorydialog.cpp
     src/dialogs/addingfiledialog.cpp
@@ -42,6 +43,7 @@ set(HEADERS
     include/views/mainwindow.h
     include/widgets/dashboardwidget.h
     include/widgets/savingwidget.h
+    include/widgets/monthreportwidget.h
     include/dialogs/formdialog.h
     include/dialogs/categorydialog.h
     include/dialogs/addingfiledialog.h
@@ -60,6 +62,7 @@ set(UI_FILES
     ui/categorydialog.ui
     ui/monthselectordialog.ui
     ui/addingfiledialog.ui
+    ui/monthreportwidget.ui
 )
 
 add_subdirectory(libs/XLSXReader)
