@@ -1,5 +1,5 @@
-#ifndef LOGINSIGNINDIALOG_H
-#define LOGINSIGNINDIALOG_H
+#ifndef USERSETTINGSCLASS_H
+#define USERSETTINGSCLASS_H
 
 #include "database/databasemanager.h"
 #include <QDialog>
@@ -20,29 +20,36 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLineEdit>
+#include <QSettings>
 
 
-namespace Ui { class LogInSignUpDialog; }
+namespace Ui { class userSettingsDialog; }
 
-class LogInSignUpDialog : public QDialog {
+class UserSettingsDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit LogInSignUpDialog(QWidget *parent = nullptr);
-    ~LogInSignUpDialog();
+    explicit UserSettingsDialog(QWidget *parent = nullptr);
+    ~UserSettingsDialog();
+
+    static void tryAutoLogin(QNetworkAccessManager *manager,
+                             std::function<void(bool success)> callback);
+    static void logout();
+
+signals:
+    void backToMain();
 
 private:
-    Ui::LogInSignUpDialog *ui;
+    Ui::userSettingsDialog *ui;
     QNetworkAccessManager *m_networkManager;
     QString m_supabaseUrl;
     QString m_supabaseAnonKey;
 
-    
     void checkSigninPassword();
     void onAcceptButton();
     void signinWithSupabase(const QString &name, const QString &email, const QString &password, const QDate &birthday);
     void loginWithSupabase(const QString &email, const QString &password);
-    void handleAuthResponse(const QString requestType ,QNetworkReply *reply);
+    void handleAuthResponse(const QString requestType, QNetworkReply *reply);
 };
 
 #endif

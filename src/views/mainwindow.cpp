@@ -4,13 +4,14 @@
 #include "widgets/savingwidget.h"
 #include "widgets/monthreportwidget.h"
 #include "dialogs/monthselectordialog.h"
-#include "dialogs/loginsignupdialog.h"
+#include "dialogs/usersettingsdialog.h"
 
 extern QString user_id;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_networkManager(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
     setMinimumSize(380, 300);
@@ -19,6 +20,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
+
+    UserSettingsDialog::tryAutoLogin(m_networkManager, [this](bool success) {
+        if (success) {
+            qDebug() << "Session restored from saved token";
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -27,9 +34,10 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::onUserSettingsPressed() {
-    LogInSignUpDialog *dialog = new LogInSignUpDialog(this);
-    connect(dialog, &LogInSignUpDialog::accepted, this, &MainWindow::showMainView);
-    connect(dialog, &LogInSignUpDialog::rejected, this, &MainWindow::showMainView);
+    UserSettingsDialog *dialog = new UserSettingsDialog(this);
+    connect(dialog, &UserSettingsDialog::accepted, this, &MainWindow::showMainView);
+    connect(dialog, &UserSettingsDialog::rejected, this, &MainWindow::showMainView);
+    connect(dialog, &UserSettingsDialog::backToMain, this, &MainWindow::showMainView);
     setCentralWidget(dialog);
 }
 

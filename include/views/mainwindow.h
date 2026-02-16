@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QDateTime>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -31,6 +32,7 @@ private slots:
     
 private:
     Ui::MainWindow *ui;
+    QNetworkAccessManager *m_networkManager;
 };
 
 #endif // MAINWINDOW_H
