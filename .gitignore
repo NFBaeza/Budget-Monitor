@@ -2,3 +2,4 @@ build/
 .claude
 budget_monitor.db
 .env
+AppDir/
