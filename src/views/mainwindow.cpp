@@ -4,9 +4,9 @@
 #include "widgets/savingwidget.h"
 #include "widgets/monthreportwidget.h"
 #include "dialogs/monthselectordialog.h"
-#include "dialogs/loginsignindialog.h"
+#include "dialogs/loginsignupdialog.h"
 
-extern const QString user_id = "68e6ff6b-9189-48be-a84b-03a5448e0b8b";
+extern QString user_id;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -27,42 +27,57 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::onUserSettingsPressed() {
-    LogInSignInDialog *dialog = new LogInSignInDialog(this);
-    connect(dialog, &LogInSignInDialog::accepted, this, &MainWindow::showMainView);
-    connect(dialog, &LogInSignInDialog::rejected, this, &MainWindow::showMainView);
+    LogInSignUpDialog *dialog = new LogInSignUpDialog(this);
+    connect(dialog, &LogInSignUpDialog::accepted, this, &MainWindow::showMainView);
+    connect(dialog, &LogInSignUpDialog::rejected, this, &MainWindow::showMainView);
     setCentralWidget(dialog);
 }
 
 void MainWindow::onPastMonthsButtonPressed() {
-    MonthSelectorDialog *dialog = new MonthSelectorDialog(this);
-    connect(dialog, &MonthSelectorDialog::month_clicked, this, [this](QDate date) {
-        MonthView *monthView = new MonthView(date, this);
-        connect(monthView, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-        setMinimumSize(1080, 650);
-        setCentralWidget(monthView);
-    });
-    connect(dialog, &MonthSelectorDialog::close_was_pressed, this, &MainWindow::showMainView);
-    setCentralWidget(dialog);
+    if(!user_id.isEmpty()){
+        MonthSelectorDialog *dialog = new MonthSelectorDialog(this);
+        connect(dialog, &MonthSelectorDialog::month_clicked, this, [this](QDate date) {
+            MonthView *monthView = new MonthView(date, this);
+            connect(monthView, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
+            setMinimumSize(1080, 650);
+            setCentralWidget(monthView);
+        });
+        connect(dialog, &MonthSelectorDialog::close_was_pressed, this, &MainWindow::showMainView);
+        setCentralWidget(dialog);
+    }else{
+        QMessageBox::warning(this, "Error", "Please login first");
+        onUserSettingsPressed();
+    } 
 }
 
 void MainWindow::onSavingPressed() {
-    SavingView *dashboard = new SavingView(this);
-    connect(dashboard, &SavingView::backbutton_was_pressed, this, &MainWindow::showMainView);
-    connect(dashboard, &SavingView::monthSelected, this, [this](QDate date) {
-        MonthReport *monthReport = new MonthReport(date, this);
-        connect(monthReport, &MonthReport::backToSavingButtonWasPressed, this, &MainWindow::onSavingPressed);
-        resize(660, 750);
-        setCentralWidget(monthReport);
-    });
-    resize(1080, 650);
-    setCentralWidget(dashboard);
+    if(!user_id.isEmpty()){
+        SavingView *dashboard = new SavingView(this);
+        connect(dashboard, &SavingView::backbutton_was_pressed, this, &MainWindow::showMainView);
+        connect(dashboard, &SavingView::monthSelected, this, [this](QDate date) {
+            MonthReport *monthReport = new MonthReport(date, this);
+            connect(monthReport, &MonthReport::backToSavingButtonWasPressed, this, &MainWindow::onSavingPressed);
+            resize(660, 750);
+            setCentralWidget(monthReport);
+        });
+        resize(1080, 650);
+        setCentralWidget(dashboard);
+    }else{
+        QMessageBox::warning(this, "Error", "Please login first");
+        onUserSettingsPressed();
+    }   
 }
 
 void MainWindow::onCurrentMonthPressed() {
-    MonthView *dashboard = new MonthView(QDate::currentDate(), this);
-    connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-    resize(1080, 650);
-    setCentralWidget(dashboard);
+    if(!user_id.isEmpty()){
+        MonthView *dashboard = new MonthView(QDate::currentDate(), this);
+        connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
+        resize(1080, 650);
+        setCentralWidget(dashboard);
+    }else{
+        QMessageBox::warning(this, "Error", "Please login first");
+        onUserSettingsPressed();
+    }
 }
 
 void MainWindow::showMainView() {

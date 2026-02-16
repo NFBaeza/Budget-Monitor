@@ -14,7 +14,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Charts)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Charts Network)
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -34,7 +34,7 @@ set(SOURCES
     src/dialogs/categorydialog.cpp
     src/dialogs/addingfiledialog.cpp
     src/dialogs/monthselectordialog.cpp
-    src/dialogs/loginsignindialog.cpp
+    src/dialogs/loginsignupdialog.cpp
     src/database/databasemanager.cpp 
     src/database/databaseworker.cpp   
 )
@@ -49,7 +49,7 @@ set(HEADERS
     include/dialogs/categorydialog.h
     include/dialogs/addingfiledialog.h
     include/dialogs/monthselectordialog.h
-    include/dialogs/loginsignindialog.h
+    include/dialogs/loginsignupdialog.h
     include/database/databasemanager.h
     include/database/databaseworker.h
 )
@@ -65,7 +65,7 @@ set(UI_FILES
     ui/monthselectordialog.ui
     ui/addingfiledialog.ui
     ui/monthreportwidget.ui
-    ui/loginsignindialog.ui
+    ui/loginsignupdialog.ui
 )
 
 add_subdirectory(libs/XLSXReader)
@@ -92,5 +92,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Sql
     Qt6::Charts
+    Qt6::Network
     XLSXREADER
 )
