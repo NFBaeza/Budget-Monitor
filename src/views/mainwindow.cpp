@@ -4,6 +4,7 @@
 #include "widgets/savingwidget.h"
 #include "widgets/monthreportwidget.h"
 #include "dialogs/monthselectordialog.h"
+#include "dialogs/loginsignindialog.h"
 
 extern const QString user_id = "68e6ff6b-9189-48be-a84b-03a5448e0b8b";
 
@@ -16,12 +17,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
+    connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::onUserSettingsPressed() {
+    LogInSignInDialog *dialog = new LogInSignInDialog(this);
+    connect(dialog, &LogInSignInDialog::accepted, this, &MainWindow::showMainView);
+    connect(dialog, &LogInSignInDialog::rejected, this, &MainWindow::showMainView);
+    setCentralWidget(dialog);
 }
 
 void MainWindow::onPastMonthsButtonPressed() {
@@ -71,4 +80,7 @@ void MainWindow::showMainView() {
     // Reconnect the button signals
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
-    connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);}
+    connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
+    connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
+}
+    
