@@ -34,6 +34,7 @@ set(SOURCES
     src/dialogs/categorydialog.cpp
     src/dialogs/addingfiledialog.cpp
     src/dialogs/monthselectordialog.cpp
+    src/dialogs/loginsignindialog.cpp
     src/database/databasemanager.cpp 
     src/database/databaseworker.cpp   
 )
@@ -48,6 +49,7 @@ set(HEADERS
     include/dialogs/categorydialog.h
     include/dialogs/addingfiledialog.h
     include/dialogs/monthselectordialog.h
+    include/dialogs/loginsignindialog.h
     include/database/databasemanager.h
     include/database/databaseworker.h
 )
@@ -63,6 +65,7 @@ set(UI_FILES
     ui/monthselectordialog.ui
     ui/addingfiledialog.ui
     ui/monthreportwidget.ui
+    ui/loginsignindialog.ui
 )
 
 add_subdirectory(libs/XLSXReader)

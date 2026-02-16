@@ -26,6 +26,7 @@ private slots:
     void onSavingPressed();
     void showMainView();
     void onPastMonthsButtonPressed();
+    void onUserSettingsPressed();
     
 private:
     Ui::MainWindow *ui;
