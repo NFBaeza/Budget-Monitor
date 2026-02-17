@@ -109,6 +109,12 @@ SUPABASE_ANON_KEY=your-anon-key
 
 You can find these values in your Supabase dashboard under **Project Settings > Database** and **Project Settings > API**.
 
+### Set up the database
+
+Run the SQL migration script in your Supabase SQL Editor (**Dashboard > SQL Editor > New query**):
+
+Copy and paste the contents of [`sql/setup.sql`](sql/setup.sql), then click **Run**. This creates the required tables (`categories`, `accounts`, `money_transactions`).
+
 ### Build and run
 
 ```bash
