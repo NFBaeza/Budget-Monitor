@@ -225,7 +225,9 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
                 QSqlQuery insertCat(m_db);
                 insertCat.prepare("INSERT INTO categories (user_id, name, type) VALUES (:user, :category, :type)");
                 insertCat.bindValue(":category", category);
-                insertCat.bindValue(":type", (category.toLower() == "abonos") ? "income" : "expense");
+                const QString lowerCat = category.toLower();
+                const bool isIncome = (lowerCat == "paycheck" || lowerCat == "deposit");
+                insertCat.bindValue(":type", isIncome ? "income" : "expense");
                 insertCat.bindValue(":user", userId);
                 if (!insertCat.exec()) {
                     emit operationError("bulkImport", insertCat.lastError().text());
