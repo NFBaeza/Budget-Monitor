@@ -36,6 +36,9 @@ CategoryDialog::CategoryDialog(QWidget *parent)
 }
 
 CategoryDialog::~CategoryDialog() {
+    incomeModel->clear();
+    expenseModel->clear();
+    accountModel->clear();
     delete ui;
 }
 
