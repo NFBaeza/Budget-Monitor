@@ -70,10 +70,13 @@ set(UI_FILES
 
 add_subdirectory(libs/XLSXReader)
 
+qt6_add_resources(RESOURCES resources.qrc)
+
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
     ${UI_FILES}
+    ${RESOURCES}
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
@@ -95,3 +98,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Network
     XLSXREADER
 )
+
+# Copy .env to build directory if it exists
+if(EXISTS "${CMAKE_SOURCE_DIR}/.env")
+    configure_file("${CMAKE_SOURCE_DIR}/.env" "${CMAKE_BINARY_DIR}/.env" COPYONLY)
+endif()

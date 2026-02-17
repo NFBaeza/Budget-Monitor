@@ -49,7 +49,7 @@ DatabaseManager::~DatabaseManager() {
 
 QMap<QString, QString> DatabaseManager::loadEnvFile() {
     QMap<QString, QString> env;
-    QFile file(QCoreApplication::applicationDirPath() + "/../.env");
+    QFile file(QCoreApplication::applicationDirPath() + "/.env");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << ".env file not found:" << file.fileName();
         return env;
