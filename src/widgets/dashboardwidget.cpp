@@ -170,27 +170,36 @@ QString MonthView::getTypeFromCategory(const QString& category) {
 }
 
 void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix) {
-    const int maxLabels = 5;
+    const int maxLabels = 6;
+
+    // Collect categories from the model with their amounts
+    QList<QPair<QString, int>> sorted;
+    for (int i = 0; i < model->rowCount(); ++i) {
+        QString categoryName = model->index(i, 2).data().toString();
+        if (!categoryName.isEmpty()) {
+            categoryName[0] = categoryName[0].toUpper();
+        }
+        int amount = amountByCategoryMap.value(categoryName.toLower(), 0);
+        sorted.append({categoryName, amount});
+    }
+
+    // Sort by amount descending
+    std::sort(sorted.begin(), sorted.end(), [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
+        return a.second > b.second;
+    });
 
     for (int i = 0; i < maxLabels; ++i) {
         QString objectName = QString("%1%2").arg(labelPrefix).arg(i + 1);
         QLabel *nameLabel = this->findChild<QLabel*>(objectName);
         QLabel *amountLabel = this->findChild<QLabel*>(objectName + "Amount");
 
-        if (i < model->rowCount()) {
-            QString categoryName = model->index(i, 2).data().toString();
-            if (!categoryName.isEmpty()) {
-                categoryName[0] = categoryName[0].toUpper();
-            }
-
-            int amount = amountByCategoryMap.value(categoryName.toLower(), 0);
-
+        if (i < sorted.size()) {
             if (nameLabel) {
-                nameLabel->setText(categoryName);
+                nameLabel->setText(sorted[i].first);
                 nameLabel->setVisible(true);
             }
             if (amountLabel) {
-                amountLabel->setText(QString::number(amount));
+                amountLabel->setText(QString::number(sorted[i].second));
                 amountLabel->setVisible(true);
             }
         } else {
@@ -279,6 +288,8 @@ void MonthView::initView(){
     MonthFilter = QString("money_transactions.date >= '%1' AND money_transactions.date <= '%2' AND money_transactions.user_id = '%3'").arg(firstDate).arg(lastDate).arg(user_id);
 
     transactionModel->setFilter(MonthFilter);
+    transactionModel->setHeaderData(4, Qt::Horizontal, "category");
+    transactionModel->setHeaderData(5, Qt::Horizontal, "account");
     if(!transactionModel->select()){qDebug()<<"[updateTransactions] error:" << transactionModel->lastError().text();return;};
     
     if (ui->TableViewLastEntry->model() != transactionModel) {

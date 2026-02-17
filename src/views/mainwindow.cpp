@@ -85,7 +85,7 @@ void MainWindow::onCurrentMonthPressed() {
     if(!user_id.isEmpty()){
         MonthView *dashboard = new MonthView(QDate::currentDate(), this);
         connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-        resize(1080, 650);
+        resize(1150, 700);
         setCentralWidget(dashboard);
     }else{
         QMessageBox::warning(this, "Error", "Please login first");
@@ -110,5 +110,12 @@ void MainWindow::showMainView() {
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
+
+    if(user_name.isEmpty()){
+        ui->userNameLabel->setVisible(false);
+    }else{
+        ui->userNameLabel->setText(user_name);
+        ui->userNameLabel->setVisible(true);
+    }
 }
     

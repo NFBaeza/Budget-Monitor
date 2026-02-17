@@ -18,7 +18,7 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &AddingFileDialog::onCancelClicked);
     connect(ui->fileAddButton, &QToolButton::clicked, this, [this]() {
         QString filePath = QFileDialog::getOpenFileName(
-            this, "Select a file", QString(), "Excel (*.xlsx *.xls)");
+            this, "Select a file", QString(), "Excel (*.xlsx *.xls *.csv)");
         if (!filePath.isEmpty()) {
             ui->filePathLineEdit->setText(filePath);
         }
