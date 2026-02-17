@@ -34,6 +34,7 @@ public:
 
 signals:
     void backToSavingButtonWasPressed();
+    void backToMenuButtonWasPressed();
 
 private:
     Ui::MonthReport *ui;

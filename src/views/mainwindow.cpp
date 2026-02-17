@@ -65,6 +65,7 @@ void MainWindow::onSavingPressed() {
         connect(dashboard, &SavingView::monthSelected, this, [this](QDate date) {
             MonthReport *monthReport = new MonthReport(date, this);
             connect(monthReport, &MonthReport::backToSavingButtonWasPressed, this, &MainWindow::onSavingPressed);
+            connect(monthReport, &MonthReport::backToMenuButtonWasPressed, this, &MainWindow::showMainView);
             resize(660, 750);
             setCentralWidget(monthReport);
         });

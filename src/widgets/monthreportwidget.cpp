@@ -14,8 +14,11 @@ MonthReport::MonthReport(QDate dateSelected, QWidget *parent)
     connect(ui->backToSavingButton, &QPushButton::clicked, this, [this](){
         emit backToSavingButtonWasPressed();
     });
-
+    connect(ui->backToMenu, &QPushButton::clicked, this, [this](){
+        emit backToMenuButtonWasPressed();
+    });
     
+
     QString month_name = QLocale().monthName(date.month());
     month_name[0] = month_name[0].toUpper();
     ui->titleMonthLabel->setText(QString("%1 %2").arg(month_name).arg(date.year()));
