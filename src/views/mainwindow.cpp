@@ -7,6 +7,7 @@
 #include "dialogs/usersettingsdialog.h"
 
 extern QString user_id;
+extern QString user_name;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -14,7 +15,8 @@ MainWindow::MainWindow(QWidget *parent)
     , m_networkManager(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
-    setMinimumSize(380, 300);
+    setMinimumSize(470, 300);
+    ui->userNameLabel->setVisible(false);
 
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
@@ -23,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     UserSettingsDialog::tryAutoLogin(m_networkManager, [this](bool success) {
         if (success) {
+            ui->userNameLabel->setText(user_name);
+            ui->userNameLabel->setVisible(true);
             qDebug() << "Session restored from saved token";
         }
     });

@@ -265,6 +265,13 @@
      <widget class="QWidget" name="userWidget">
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="0">
+        <widget class="QPushButton" name="editSettingsButton">
+         <property name="text">
+          <string>Edit Category and Accounts</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
         <widget class="QPushButton" name="logoutButton">
          <property name="text">
           <string>Log out</string>

@@ -1,11 +1,13 @@
 #include "dialogs/usersettingsdialog.h"
 #include "database/databaseworker.h"
+#include "dialogs/categorydialog.h"
 #include "./ui_usersettingsdialog.h"
 #include <QNetworkRequest>
 #include <QSslSocket>
 #include <QUrl>
 
 QString user_id = "";
+QString user_name = "";
 const QString SUPABASE_URL = "https://wuvieobepoxwolhtdtoh.supabase.co";
 const QString SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1dmllb2JlcG94d29saHRkdG9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NzY2OTAsImV4cCI6MjA4NjI1MjY5MH0.Xo5p3Vh5s0V1f8ssk43XZ_ell8JhI_qviQ-pPKso1jE";
 
@@ -44,6 +46,14 @@ UserSettingsDialog::UserSettingsDialog(QWidget *parent)
 
     connect(ui->passwordUserSignUpText, &QLineEdit::editingFinished, this, &UserSettingsDialog::checkSigninPassword);
     connect(ui->passwordUserSignUpText_2, &QLineEdit::editingFinished, this, &UserSettingsDialog::checkSigninPassword);
+
+    connect(ui->editSettingsButton, &QPushButton::pressed, this, [this](){
+        CategoryDialog dialog(this);
+
+        connect(&dialog, &CategoryDialog::dataUpdated, this, &UserSettingsDialog::onAcceptButton);
+        dialog.exec();
+    });
+
 }
 
 UserSettingsDialog::~UserSettingsDialog() {
@@ -72,7 +82,7 @@ void UserSettingsDialog::onAcceptButton(){
         }
         loginWithSupabase(email, password);
 
-    }else{
+    }else if (ui->userSettingsWidget->currentWidget() == ui->signUpWidget) {
         QString email = ui->userEmailSignUpText->text().trimmed();
         QString password = ui->passwordUserSignUpText->text();
         QString userName = ui->userNameText->text().trimmed();
@@ -91,6 +101,8 @@ void UserSettingsDialog::onAcceptButton(){
 
         signinWithSupabase(userName, email, password, birthday);
         qDebug() << "Sign up:" << userName << email;
+    }else {
+        accept();
     }
 }
 
@@ -202,14 +214,17 @@ void UserSettingsDialog::tryAutoLogin(QNetworkAccessManager *manager,
         }
 
         QJsonObject userObj = obj.value("user").toObject();
+        QJsonObject userMetadata = userObj.value("user_metadata").toObject();
         user_id = userObj.value("id").toString();
-
+        user_name = user_name = userMetadata.value("name").toString();
+        qDebug()<<"username: "<< user_name;
         QString newRefreshToken = obj.value("refresh_token").toString();
         QSettings settings("BudgetMonitor", "BudgetMonitor");
         settings.setValue("auth/refresh_token", newRefreshToken);
         settings.setValue("auth/user_id", user_id);
+        settings.setValue("auth/user_name", user_name);
 
-        qDebug() << "Auto-login successful, user_id:" << user_id;
+        qDebug() << "Auto-login successful, user_id:" << user_id << user_name;
         callback(true);
     });
 }
@@ -218,5 +233,7 @@ void UserSettingsDialog::logout() {
     QSettings settings("BudgetMonitor", "BudgetMonitor");
     settings.remove("auth/refresh_token");
     settings.remove("auth/user_id");
+    settings.remove("auth/user_name");
     user_id = "";
+    user_name = "";
 }

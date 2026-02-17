@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>398</width>
+    <width>409</width>
     <height>288</height>
    </rect>
   </property>
@@ -36,13 +36,13 @@
        <number>20</number>
       </property>
       <property name="leftMargin">
-       <number>20</number>
+       <number>50</number>
       </property>
       <property name="topMargin">
        <number>10</number>
       </property>
       <property name="rightMargin">
-       <number>20</number>
+       <number>50</number>
       </property>
       <property name="bottomMargin">
        <number>10</number>
@@ -50,7 +50,7 @@
       <item>
        <widget class="QPushButton" name="CurrentMonthButton">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -72,7 +72,7 @@
       <item>
        <widget class="QPushButton" name="SavingViewButton">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -91,7 +91,7 @@
       <item>
        <widget class="QPushButton" name="pastMonthsButton">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -122,17 +122,17 @@
      </layout>
     </item>
     <item row="2" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <property name="spacing">
-       <number>30</number>
-      </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
       <property name="sizeConstraint">
        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
       </property>
       <property name="leftMargin">
-       <number>10</number>
+       <number>30</number>
       </property>
       <property name="rightMargin">
+       <number>30</number>
+      </property>
+      <property name="bottomMargin">
        <number>10</number>
       </property>
       <item>
@@ -150,7 +150,7 @@
          </size>
         </property>
         <property name="layoutDirection">
-         <enum>Qt::LayoutDirection::RightToLeft</enum>
+         <enum>Qt::LayoutDirection::LeftToRight</enum>
         </property>
         <property name="autoFillBackground">
          <bool>false</bool>
@@ -176,6 +176,33 @@
           <width>70</width>
           <height>70</height>
          </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="userNameLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
