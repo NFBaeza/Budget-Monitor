@@ -10,62 +10,63 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 - **Monthly View**: Analyze transactions by month and yearly Savings.
 - **Real-time Updates**: Dashboard updates automatically when new transactions are added
 - **Multiple Payment Methods**: Support for different payment accounts
-- **Database Persistence**: All data stored locally in SQLite database
-- **(New) XLSX Files Reader**: Add transactions via a XLSX files.
+- **User Accounts**: Login, signup, and auto-login via Supabase authentication
+- **Database Persistence**: Data stored remotely via [Supabase](https://supabase.com/)
+- **XLSX Import**: Add transactions via XLSX bank statement files with automatic category classification
 
 
-## Screenshoot
+## Screenshot
 ![Month View UI](./imgs/ui_MonthView.png)
 
 ## Technical Stack
 
-- **Qt Framework**: 6.8.3
+- **Qt Framework**: 6.x
 - **Programming Language**: C++ 17
 - **UI Design**: Qt Designer (.ui files)
-- **Database**: SQLite 3
+- **Database**: Supabase (authentication and data persistence)
 - **Build System**: CMake
 - **Architecture**: Model-View pattern with QSqlTableModel and QSqlRelationalTableModel
+- **Networking**: Qt Network module for Supabase REST API calls
 
 ## Project Structure
 
 ```
 budget_monitor/
-├── libs/             # Modules files
-│   ├── XLSXReader/   # XLSX reader files
-├── include/          # Header files
-│   ├── dialogs/      # Dialog headers (FormDialog)
-│   ├── views/        # Main window headers
-│   └── widgets/      # Widget headers (Dashboard)
-├── src/              # Source files
-│   ├── dialogs/      # Dialog implementations
-│   ├── views/        # View implementations
-│   └── widgets/      # Widget implementations
-├── ui/               # Qt Designer UI files
-│
-├── CMakeLists.txt    # Build configuration
-└── budget_monitor.db # SQLite database
+├── libs/               # External libraries
+│   └── XLSXReader/     # XLSX bank statement parser (git submodule)
+├── include/            # Header files
+│   ├── database/       # Database manager and worker headers
+│   ├── dialogs/        # Dialog headers
+│   ├── views/          # Main window headers
+│   └── widgets/        # Widget headers (Dashboard)
+├── src/                # Source files
+│   ├── database/       # Database manager and worker implementations
+│   ├── dialogs/        # Dialog implementations
+│   ├── views/          # View implementations
+│   └── widgets/        # Widget implementations
+├── ui/                 # Qt Designer UI files
+├── imgs/               # Screenshots and assets
+└── CMakeLists.txt      # Build configuration
 ```
 
 ## Database Schema
 
-The application uses three main tables:
+The application uses three main tables (all scoped per user):
 
 - **money_transactions**: Stores all financial transactions
-  - `id`, `date`, `amount`, `category` (FK), `account` (FK), `description`
+  - `id`, `user_id`, `date`, `amount`, `category_id` (FK), `account_id` (FK), `description`
 - **categories**: Income and expense categories
-  - `id`, `category`, `type` (income/expense)
-- **payment_methods**: Available payment accounts
-  - `id`, `method`
+  - `id`, `user_id`, `name`, `type` (income/expense)
+- **accounts**: Available payment accounts
+  - `id`, `user_id`, `name`
 
 ## Building from Source
 
 ### Prerequisites
 
-- Qt 6.8.3 or higher
+- Qt 6.x or higher
 - CMake 3.10 or higher
 - C++17 compatible compiler
-- SQLite 3
-
 ### Build Steps
 
 ```bash
@@ -121,11 +122,13 @@ cmake --build .
 
 ## Roadmap
 
+- [x] User authentication (Supabase)
+- [x] XLSX bank statement import with auto-classification
+- [x] Remote database integration (Supabase)
 - [ ] Date range filtering
 - [ ] Export to PDF
 - [ ] Budget goals and alerts
 - [ ] Multi-currency support
-- [ ] Data backup and restore 
 
 ## Author
 *Natalia B*
