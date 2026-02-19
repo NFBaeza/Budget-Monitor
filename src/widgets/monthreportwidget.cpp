@@ -60,8 +60,8 @@ void MonthReport::getTotalIncomeExpenseAmount(QDate date){
 
     totalSavings = (totalIncomes - totalExpenses > 0) ? totalIncomes - totalExpenses : 0;
     
-    ui->totalExpensesAmount->setText(locale.toString(totalIncomes));
-    ui->totalIncomesAmount->setText(locale.toString(totalExpenses));
+    ui->totalExpensesAmount->setText(locale.toString(totalExpenses));
+    ui->totalIncomesAmount->setText(locale.toString(totalIncomes));
     ui->totalSavingsAmount->setText(locale.toString(totalSavings));
 }
 
