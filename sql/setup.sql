@@ -17,9 +17,11 @@ CREATE TABLE IF NOT EXISTS accounts (
 CREATE TABLE IF NOT EXISTS money_transactions (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id UUID NOT NULL,
-    date DATE NOT NULL,
+    date TIMESTAMP NOT NULL,
     amount INTEGER NOT NULL,
     category_id BIGINT REFERENCES categories(id),
     account_id BIGINT REFERENCES accounts(id),
-    description TEXT
+    description TEXT,
+    original_description TEXT,
+    CONSTRAINT unique_transaction UNIQUE (user_id, date, amount, account_id, original_description)
 );

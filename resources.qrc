@@ -1,5 +1,7 @@
+<!DOCTYPE RCC>
 <RCC>
-    <qresource prefix="/">
-        <file>imgs/login-avatar.png</file>
-    </qresource>
+  <qresource prefix="/">
+    <file>imgs/login-avatar.png</file>
+    <file>imgs/monthly-reporting.png</file>
+  </qresource>
 </RCC>

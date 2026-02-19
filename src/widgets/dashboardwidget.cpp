@@ -109,8 +109,10 @@ void  MonthView::updateTransactions(){
     ui->TableViewLastEntry->horizontalHeader()->setStretchLastSection(true);
     ui->TableViewLastEntry->setColumnHidden(0,true);
     ui->TableViewLastEntry->setColumnHidden(1,true);
+    
     ui->TableViewLastEntry->setColumnHidden(7,true);
     ui->TableViewLastEntry->setColumnHidden(8,true);
+    ui->TableViewLastEntry->setColumnHidden(9,true);
 }
 
 void MonthView::updateView(){
