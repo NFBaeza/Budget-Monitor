@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(470, 300);
     ui->userNameLabel->setVisible(false);
 
+    ui->labelTitle->setStyleSheet("font-size: 13pt");
+
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
