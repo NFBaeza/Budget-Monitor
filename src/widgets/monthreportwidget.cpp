@@ -22,7 +22,7 @@ MonthReport::MonthReport(QDate dateSelected, QWidget *parent)
     QString month_name = QLocale().monthName(date.month());
     month_name[0] = month_name[0].toUpper();
     ui->titleMonthLabel->setText(QString("%1 %2").arg(month_name).arg(date.year()));
-
+    ui->titleMonthLabel->setStyleSheet("font-size: 16pt");
     getTotalIncomeExpenseAmount(date);
     createPieChart();
     getExpenseBreakdown(date);
@@ -58,10 +58,10 @@ void MonthReport::getTotalIncomeExpenseAmount(QDate date){
         qDebug() << "[setAmountByCategory] ERROR:" << query.lastError().text();
     }
 
-    totalSavings = totalIncomes - totalExpenses;
+    totalSavings = (totalIncomes - totalExpenses > 0) ? totalIncomes - totalExpenses : 0;
     
-    ui->totalExpensesAmount->setText(locale.toString(totalIncomes));
-    ui->totalIncomesAmount->setText(locale.toString(totalExpenses));
+    ui->totalExpensesAmount->setText(locale.toString(totalExpenses));
+    ui->totalIncomesAmount->setText(locale.toString(totalIncomes));
     ui->totalSavingsAmount->setText(locale.toString(totalSavings));
 }
 

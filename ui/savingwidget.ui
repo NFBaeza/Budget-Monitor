@@ -126,12 +126,14 @@
           <widget class="QLabel" name="labelTotal">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>true</bold>
              <underline>false</underline>
             </font>
            </property>
            <property name="text">
-            <string>Total</string>
+            <string>Total Savings</string>
            </property>
           </widget>
          </item>
@@ -139,6 +141,8 @@
           <widget class="QLabel" name="labelTotalAmount">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>false</bold>
              <underline>false</underline>
             </font>
@@ -155,12 +159,14 @@
           <widget class="QLabel" name="labelAverage">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>true</bold>
              <underline>false</underline>
             </font>
            </property>
            <property name="text">
-            <string>Average</string>
+            <string>Average Monthly Savings</string>
            </property>
           </widget>
          </item>
@@ -168,6 +174,8 @@
           <widget class="QLabel" name="labelAverageAmount">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>false</bold>
              <underline>false</underline>
             </font>
@@ -184,12 +192,14 @@
           <widget class="QLabel" name="labelHigher">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>true</bold>
              <underline>false</underline>
             </font>
            </property>
            <property name="text">
-            <string>Higher</string>
+            <string>Highest Monthly Savings</string>
            </property>
           </widget>
          </item>
@@ -197,6 +207,8 @@
           <widget class="QLabel" name="labelHigherAmount">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>false</bold>
              <underline>false</underline>
             </font>
@@ -213,12 +225,14 @@
           <widget class="QLabel" name="labelLower">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>true</bold>
              <underline>false</underline>
             </font>
            </property>
            <property name="text">
-            <string>Lower</string>
+            <string>Lowest Monthly Savings</string>
            </property>
           </widget>
          </item>
@@ -226,6 +240,8 @@
           <widget class="QLabel" name="labelLowerAmount">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>false</bold>
              <underline>false</underline>
             </font>
@@ -242,12 +258,14 @@
           <widget class="QLabel" name="labelRatio">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>true</bold>
              <underline>false</underline>
             </font>
            </property>
            <property name="text">
-            <string>Ratio</string>
+            <string>Savings Rate</string>
            </property>
           </widget>
          </item>
@@ -255,6 +273,8 @@
           <widget class="QLabel" name="labelRatioAmount">
            <property name="font">
             <font>
+             <family>Noto Sans Deseret</family>
+             <pointsize>11</pointsize>
              <bold>false</bold>
              <underline>false</underline>
             </font>
