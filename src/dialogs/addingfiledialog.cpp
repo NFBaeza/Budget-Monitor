@@ -55,8 +55,7 @@ void AddingFileDialog::onAcceptClicked() {
         return;
     }
 
-    bank->filePath = filePath;
-    bank->readBankMovements();
+    bank->readBankMovements(filePath);
 
     if (bank->transactions.empty()) {
         QMessageBox::warning(this, "Error", "No transactions found in file");

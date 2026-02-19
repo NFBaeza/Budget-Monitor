@@ -207,11 +207,12 @@
         </property>
         <property name="font">
          <font>
+          <italic>true</italic>
           <bold>true</bold>
          </font>
         </property>
         <property name="text">
-         <string>TextLabel</string>
+         <string>Please Login</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -247,6 +248,12 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>userSettingsButton</tabstop>
+  <tabstop>CurrentMonthButton</tabstop>
+  <tabstop>SavingViewButton</tabstop>
+  <tabstop>pastMonthsButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

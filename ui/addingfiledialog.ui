@@ -125,6 +125,11 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>accountComboBox</tabstop>
+  <tabstop>fileAddButton</tabstop>
+  <tabstop>filePathLineEdit</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -66,24 +66,25 @@ void SavingView::getAmountByMonth(const QString firstDate, const QString lastDat
 }
 
 void SavingView::updateSummary(){
+    QLocale locale(QLocale::German);
     if (money_by_month.empty()) return;
 
     int total_savings = 0;
     for (const auto& money : money_by_month) {
         total_savings += money.saving;
     }
-    ui->labelTotalAmount->setText(QString::number(total_savings));
-    ui->labelAverageAmount->setText(QString::number(total_savings / 12));
+    ui->labelTotalAmount->setText(locale.toString(total_savings));
+    ui->labelAverageAmount->setText(locale.toString(total_savings / 12));
 
     auto compareBySaving = [](const Ui::MONEY& a, const Ui::MONEY& b) {
         return a.saving < b.saving;
     };
 
     auto it_max = std::max_element(money_by_month.begin(), money_by_month.end(), compareBySaving);
-    ui->labelHigherAmount->setText(QString::number(it_max->saving));
+    ui->labelHigherAmount->setText(locale.toString(it_max->saving));
 
     auto it_min = std::min_element(money_by_month.begin(), money_by_month.end(), compareBySaving);
-    ui->labelLowerAmount->setText(QString::number(it_min->saving));
+    ui->labelLowerAmount->setText(locale.toString(it_min->saving));
 
     if (money_by_month.size() >= 2) {
         int saving_reciente = money_by_month.front().saving;  
@@ -91,7 +92,7 @@ void SavingView::updateSummary(){
 
         if (saving_antiguo != 0) {
             double ratio = ((double)(saving_reciente - saving_antiguo) / std::abs(saving_antiguo)) * 100.0;
-            ui->labelRatioAmount->setText(QString::number(ratio, 'f', 1) + "%");
+            ui->labelRatioAmount->setText(locale.toString(ratio, 'f', 1) + "%");
         } else {
             ui->labelRatioAmount->setText("N/A");
         }
