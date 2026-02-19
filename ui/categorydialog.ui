@@ -235,6 +235,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>listIncomeView</tabstop>
+  <tabstop>IncomeAddButton</tabstop>
+  <tabstop>IncomeRemoveButton</tabstop>
+  <tabstop>listExpenseView</tabstop>
+  <tabstop>ExpenseAddButton</tabstop>
+  <tabstop>ExpenseRemoveButton</tabstop>
+  <tabstop>listAccountView</tabstop>
+  <tabstop>AccountAddButton</tabstop>
+  <tabstop>AccountRemoveButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

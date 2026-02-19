@@ -172,6 +172,7 @@ QString MonthView::getTypeFromCategory(const QString& category) {
 }
 
 void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix) {
+    QLocale locale(QLocale::German);
     const int maxLabels = 6;
 
     // Collect categories from the model with their amounts
@@ -201,7 +202,7 @@ void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &lab
                 nameLabel->setVisible(true);
             }
             if (amountLabel) {
-                amountLabel->setText(QString::number(sorted[i].second));
+                amountLabel->setText(locale.toString(sorted[i].second));
                 amountLabel->setVisible(true);
             }
         } else {
@@ -220,6 +221,7 @@ void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &lab
 
 
 void MonthView::updateSummary(){
+    QLocale locale(QLocale::German);
     totalIncomes = 0.0;
     totalExpenses = 0.0;
 
@@ -234,9 +236,9 @@ void MonthView::updateSummary(){
 
     savings = totalIncomes - totalExpenses;
 
-    ui->TotalSavingsAmount->setText(QString::number(savings));
-    ui->TotalIncomesAmount->setText(QString::number(totalIncomes));
-    ui->TotalExpensesAmount->setText(QString::number(totalExpenses));
+    ui->TotalSavingsAmount->setText(locale.toString(savings));
+    ui->TotalIncomesAmount->setText(locale.toString(totalIncomes));
+    ui->TotalExpensesAmount->setText(locale.toString(totalExpenses));
 }
 
 void MonthView::updatePieChart() {

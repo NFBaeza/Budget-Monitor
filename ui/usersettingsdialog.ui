@@ -27,7 +27,7 @@
    <item row="0" column="0">
     <widget class="QStackedWidget" name="userSettingsWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="logInWidget">
       <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,1,2">
@@ -284,6 +284,19 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>userNameText</tabstop>
+  <tabstop>userEmailSignUpText</tabstop>
+  <tabstop>passwordUserSignUpText</tabstop>
+  <tabstop>passwordUserSignUpText_2</tabstop>
+  <tabstop>birthDateUSerSignUpDate</tabstop>
+  <tabstop>logInButton</tabstop>
+  <tabstop>editSettingsButton</tabstop>
+  <tabstop>logoutButton</tabstop>
+  <tabstop>userEmailLogInText</tabstop>
+  <tabstop>passwordLogInText</tabstop>
+  <tabstop>signUpButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
