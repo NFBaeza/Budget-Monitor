@@ -3,3 +3,4 @@ build/
 budget_monitor.db
 .env
 AppDir/
+docs/
