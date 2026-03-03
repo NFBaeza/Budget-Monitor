@@ -8,23 +8,20 @@
 extern QString user_id;
 static QLocale s_locale(QLocale::German);
 
-MonthView::MonthView(QDate date_selected, QWidget *parent) :
+MonthView::MonthView(QDate dateSelected, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::MonthView),
-    dateViewSelected(date_selected) {
-    
+    ReportService(dateSelected, user_id),
+    dateViewSelected(dateSelected)
+{
     ui->setupUi(this);
     this->setMinimumSize(1080, 650);
     ui->typeAccountView->setCurrentIndex(0);
 
-    month_name_ = QLocale().monthName(dateViewSelected.month());
-    month_name_[0] = month_name_[0].toUpper();
-    ui->MonthNameLabel->setText(QString("%1 %2").arg(month_name_).arg(dateViewSelected.year()));
+    monthName = QLocale().monthName(dateViewSelected.month());
+    monthName[0] = monthName[0].toUpper();
+    ui->MonthNameLabel->setText(QString("%1 %2").arg(monthName).arg(dateViewSelected.year()));
 
-    categoryModel = DatabaseManager::instance().getCategoryModel(this);
-    incomesModel = DatabaseManager::instance().getIncomeModel(this);
-    expensesModel = DatabaseManager::instance().getExpenseModel(this);
-    accountModel = DatabaseManager::instance().getAccountModel(this);
     transactionModel = DatabaseManager::instance().getTransactionsModel(this);
     
     connect(ui->BackButton, &QPushButton::clicked, this, &MonthView::backButtonWasPressed);
@@ -49,7 +46,6 @@ void MonthView::onAddButtonClicked() {
     FormDialog dialog(this);
 
     connect(&dialog, &FormDialog::dataInserted, this, [this]() {
-        qDebug() << "[onAddButtonClicked] Transaction inserted, refreshing...";
         updateView();
     });
 
@@ -60,7 +56,6 @@ void MonthView::onAddFileButtonClicked() {
     AddingFileDialog dialog(this);
 
     connect(&dialog, &AddingFileDialog::dataInserted, this, [this]() {
-        qDebug() << "[onAddFileButtonClicked] File inserted, refreshing...";
         updateView();
     });
 
@@ -71,7 +66,6 @@ void MonthView::onEditButtonClicked() {
     CategoryDialog dialog(this);
 
     connect(&dialog, &CategoryDialog::dataUpdated, this, [this]() {
-        qDebug() << "[onEditButtonClicked] Categories Updated, refreshing...";
         updateView();
     });
 
@@ -87,17 +81,14 @@ void MonthView::onTableRowDoubleClicked(const QModelIndex &index) {
     FormDialog dialog(transactionId, this);
 
     connect(&dialog, &FormDialog::dataDeleted, this, [this]() {
-        qDebug() << "[OnTableRowDoubleClicked] Transaction deleted, refreshing...";
         updateView();
     });
 
     connect(&dialog, &FormDialog::dataInserted, this, [this]() {
-        qDebug() << "[OnTableRowDoubleClicked] Transaction inserted, refreshing...";
         updateView();
     });
 
      connect(&dialog, &FormDialog::dataUpdated, this, [this]() {
-        qDebug() << "[OnTableRowDoubleClicked] Transaction updated, refreshing...";
         updateView();
     });
 
@@ -110,52 +101,19 @@ void  MonthView::updateTransactions(){
     ui->TableViewLastEntry->setColumnHidden(0,true);
     ui->TableViewLastEntry->setColumnHidden(1,true);
     
-    ui->TableViewLastEntry->setColumnHidden(numberOfLabelPerCreditCard,true);
+    ui->TableViewLastEntry->setColumnHidden(7,true);
     ui->TableViewLastEntry->setColumnHidden(8,true);
     ui->TableViewLastEntry->setColumnHidden(9,true);
 }
 
 void MonthView::updateCreditReview(){
-    QSqlDatabase db = DatabaseManager::instance().getDatabase();
-    QSqlQuery query(db);
-    if (!query.prepare("SELECT card.name, SUM(t.amount) "
-        "FROM money_transactions t "
-        "JOIN accounts card ON t.account_id = card.id "
-        "WHERE t.date >= :start "
-        "AND t.date <= :end "
-        "AND t.user_id = :user "
-        "AND card.type = 'credit' "
-        "GROUP BY card.name")) {
-        qDebug() << "[updateCreditReview] PREPARE ERROR:" << query.lastError().text();
-        return;
-    }
-
-    auto [firstDate, lastDate] = monthDateRange();
-    query.bindValue(":start", firstDate.toString("yyyy-MM-dd"));
-    query.bindValue(":end", lastDate.toString("yyyy-MM-dd"));
-    query.bindValue(":user", user_id);
-
-    if (!query.exec()) {
-        qDebug() << "[updateCreditReview] ERROR:" << query.lastError().text();
-        return;
-    }
-
-    QMap<QString, int> usedCreditMap;
-    while (query.next()) {
-        usedCreditMap[query.value(0).toString()] = query.value(1).toInt();
-    }
-
-    for(int i = 0; i < numberOfCreditCards; i++){
-        QString bankName   = accountModel->index(i, 2).data().toString();
-        int limitCredit    = accountModel->index(i, 3).data().toInt();
-        int usedCredit     = usedCreditMap.value(bankName, 0);
-        int availableCredit = limitCredit - usedCredit;
-
+    QList creditCardSumary = ReportService.getCreditSummaries(numberOfCreditCards);
+    for(int i = 0; i < creditCardSumary.size(); i++){
         m_labels[i*numberOfLabelPerCreditCard]->setTextFormat(Qt::MarkdownText);
-        m_labels[i*numberOfLabelPerCreditCard]->setText(QString("**%1**").arg(bankName));
-        m_labels[i*numberOfLabelPerCreditCard+2]->setText(QString::number(usedCredit));
-        m_labels[i*numberOfLabelPerCreditCard+4]->setText(QString::number(availableCredit));
-        m_labels[i*numberOfLabelPerCreditCard+6]->setText(QString::number(limitCredit));
+        m_labels[i*numberOfLabelPerCreditCard]->setText(QString("**%1**").arg(creditCardSumary[i].bankName));
+        m_labels[i*numberOfLabelPerCreditCard+2]->setText(QString::number(creditCardSumary[i].usedCredit));
+        m_labels[i*numberOfLabelPerCreditCard+4]->setText(QString::number(creditCardSumary[i].availableCredit));
+        m_labels[i*numberOfLabelPerCreditCard+6]->setText(QString::number(creditCardSumary[i].limitCredit));
 
         for(int posY = 2; posY < numberOfLabelPerCreditCard; posY+=2){
             m_labels[i*numberOfLabelPerCreditCard+posY]->setAlignment(Qt::AlignRight);
@@ -164,19 +122,13 @@ void MonthView::updateCreditReview(){
 }
 
 void MonthView::updateView(){
-    incomesModel->select();
-    expensesModel->select();
-    categoryModel->select();
     transactionModel->setFilter(monthFilter);
-
     updateTransactions();
 
-    amountByCategoryMap.clear();
+    amountByCategoryMap = ReportService.getAmountByCategory();
 
-    setAmountByCategory();
-
-    updateLabelsFromFilter(incomesModel, "Income");
-    updateLabelsFromFilter(expensesModel, "Expense");
+    updateLabelsFromFilter("Income");
+    updateLabelsFromFilter("Expense");
 
     updateCreditReview();
 
@@ -186,33 +138,7 @@ void MonthView::updateView(){
     this->update();
 }
 
-void MonthView::setAmountByCategory() {
-    QSqlDatabase db = DatabaseManager::instance().getDatabase();
-    QSqlQuery query(db);
-    if (!query.prepare("SELECT c.name, SUM(t.amount) "
-                  "FROM money_transactions t "
-                  "JOIN categories c ON t.category_id = c.id "
-                  "WHERE t.date >= :start AND t.date <= :end AND t.user_id = :user "
-                  "GROUP BY c.name")) {
-        qDebug() << "[setAmountByCategory] PREPARE ERROR:" << query.lastError().text();
-        return;
-    }
 
-    auto [firstDate, lastDate] = monthDateRange();
-    query.bindValue(":start", firstDate.toString("yyyy-MM-dd"));
-    query.bindValue(":end", lastDate.toString("yyyy-MM-dd"));
-    query.bindValue(":user", user_id);
-
-    if (query.exec()) {
-        while (query.next()) {
-            QString name = query.value(0).toString().toLower();
-            int total = query.value(1).toInt();
-            amountByCategoryMap[name] = total;
-        }
-    } else {
-        qDebug() << "[setAmountByCategory] ERROR:" << query.lastError().text();
-    }
-}
 
 QPair<QDate, QDate> MonthView::monthDateRange() const {
     return {
@@ -221,36 +147,25 @@ QPair<QDate, QDate> MonthView::monthDateRange() const {
     };
 }
 
-QString MonthView::getTypeFromCategory(const QString& category) {
-    for (int i = 0; i < incomesModel->rowCount(); ++i) {
-        if (incomesModel->record(i).value("name").toString().toLower() == category) {
-            return "income";
-        }
-    }
-    return "expense";
-}
-
-void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix) {
+void MonthView::updateLabelsFromFilter(const QString type) {
     const int maxLabels = 6;
 
     // Collect categories from the model with their amounts
     QList<QPair<QString, int>> sorted;
-    for (int i = 0; i < model->rowCount(); ++i) {
-        QString categoryName = model->index(i, 2).data().toString();
-        if (!categoryName.isEmpty()) {
-            categoryName[0] = categoryName[0].toUpper();
-        }
-        int amount = amountByCategoryMap.value(categoryName.toLower(), 0);
-        sorted.append({categoryName, amount});
+    for (const auto& [category, amount] : amountByCategoryMap.asKeyValueRange()) {
+        if(ReportService.getCategoryType(category) == type.toLower()){
+            QString categoryUpper = category;
+            categoryUpper[0] = categoryUpper[0].toUpper();
+            sorted.append({categoryUpper, amount});
+        }    
     }
 
-    // Sort by amount descending
     std::sort(sorted.begin(), sorted.end(), [](const QPair<QString, int> &a, const QPair<QString, int> &b) {
         return a.second > b.second;
     });
 
     for (int i = 0; i < maxLabels; ++i) {
-        QString objectName = QString("%1%2").arg(labelPrefix).arg(i + 1);
+        QString objectName = QString("%1%2").arg(type).arg(i + 1);
         QLabel *nameLabel   = m_labelCache.value(objectName, nullptr);
         QLabel *amountLabel = m_labelCache.value(objectName + "Amount", nullptr);
 
@@ -279,35 +194,22 @@ void MonthView::updateLabelsFromFilter(QSqlTableModel *model, const QString &lab
 
 
 void MonthView::updateSummary(){
-    totalIncomes = 0;
-    totalExpenses = 0;
-
-    for (const auto& [category, amount] : amountByCategoryMap.asKeyValueRange()) {
-        QString type = getTypeFromCategory(category.toLower());
-        if(type == "expense"){
-            totalExpenses += amount;
-        }else{
-            totalIncomes += amount;
-        }
-    }
-
-    savings = totalIncomes - totalExpenses;
-
-    ui->TotalSavingsAmount->setText(s_locale.toString(savings));
-    ui->TotalIncomesAmount->setText(s_locale.toString(totalIncomes));
-    ui->TotalExpensesAmount->setText(s_locale.toString(totalExpenses));
+    totals = ReportService.getComputeTotals(amountByCategoryMap);
+    ui->TotalSavingsAmount->setText(s_locale.toString(totals.savings));
+    ui->TotalIncomesAmount->setText(s_locale.toString(totals.incomes));
+    ui->TotalExpensesAmount->setText(s_locale.toString(totals.expenses));
 }
 
 void MonthView::updatePieChart() {
     auto *series = new QPieSeries();
     for (const auto& [category, amount] : amountByCategoryMap.asKeyValueRange()) {
-        if(getTypeFromCategory(category.toLower()) == "expense"){
+        if(ReportService.getCategoryType(category) == "expense"){
             series->append(category, amount);
         }
     }
 
-    if (totalIncomes > totalExpenses) {
-        QPieSlice *slice = series->append("Available balance", savings);
+    if (totals.incomes > totals.expenses) {
+        QPieSlice *slice = series->append("Available balance", totals.savings);
         slice->setBrush(Qt::lightGray);
     }
 
@@ -357,12 +259,8 @@ void MonthView::initView(){
         ui->TableViewLastEntry->setItemDelegate(new QSqlRelationalDelegate(ui->TableViewLastEntry));
     }
 
-    QString creditAccountFilter = QString("accounts.type = '%1' AND accounts.user_id = '%2'").arg("credit").arg(user_id);
-    
-    accountModel->setFilter(creditAccountFilter);
-    accountModel->select();
+    numberOfCreditCards = ReportService.getCreditCardNumber();
 
-    numberOfCreditCards = accountModel->rowCount() <= maxNumberOfCreditCardsCanDisplay ? accountModel->rowCount() : maxNumberOfCreditCardsCanDisplay;
     m_labels.resize(numberOfCreditCards * numberOfLabelPerCreditCard);
 
     for (int newLabelNumber = 0; newLabelNumber < numberOfCreditCards*numberOfLabelPerCreditCard; newLabelNumber++) {

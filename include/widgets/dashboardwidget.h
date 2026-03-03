@@ -2,6 +2,7 @@
 #define DASHBOARDWIDGET_H
 
 #include "database/databasemanager.h"
+#include "reportServices/monthlyreportservice.h"
 #include <QWidget>
 #include <QLabel>
 #include <QSqlRecord>
@@ -26,8 +27,7 @@ class MonthView : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MonthView(QDate date_selected, QWidget *parent = nullptr);
-    QMap<QString, int> amountByCategoryMap;
+    explicit MonthView(QDate dateSelected, QWidget *parent = nullptr);
     ~MonthView();
 
 signals:
@@ -41,27 +41,26 @@ private slots:
 
 private:
     Ui::MonthView *ui;
-    QSqlTableModel *categoryModel{nullptr};
-    QSqlTableModel *incomesModel{nullptr};
-    QSqlTableModel *expensesModel{nullptr};
-    QSqlTableModel *accountModel{nullptr};
+    MonthlyReportService ReportService;
     QSqlRelationalTableModel *transactionModel{nullptr};
-
-    QString month_name_;
+    
+    QPair<QDate, QDate> monthDateRange() const;
+    QString monthFilter;
+    QString monthName;
     QDate dateViewSelected;
+
     int numberOfCreditCards = 0;
-    int totalIncomes = 0;
-    int totalExpenses = 0;
-    int savings = 0;
     int maxNumberOfCreditCardsCanDisplay = 3;
     int numberOfLabelPerCreditCard = 7;
     
+    MonthlyReportService::Totals totals;
+    QMap<QString, int> amountByCategoryMap;
+
     QStringList labels = {"name","Used Credit","0","Available Credit","0","Limit Credit","0"};
     QVector<QLabel*> m_labels;
     QMap<QString, QLabel*> m_labelCache;
 
-    void setAmountByCategory();
-    void updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix);
+    void updateLabelsFromFilter(const QString type);
     void updateTransactions();
     void initView();
     void updatePieChart();
@@ -70,12 +69,6 @@ private:
     void updateView();
     void onAddFileButtonClicked();
     void updateCreditReview();
-
-    QPair<QDate, QDate> monthDateRange() const;
-    QString getTypeFromCategory(const QString& category);
-    QString monthFilter;
- 
-    
 };
 
 #endif

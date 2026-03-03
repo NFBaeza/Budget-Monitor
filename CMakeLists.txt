@@ -35,6 +35,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/widgets)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/views)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/database)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/reportservices)
 
 
 set(SOURCES
@@ -50,6 +51,7 @@ set(SOURCES
     src/dialogs/usersettingsdialog.cpp
     src/database/databasemanager.cpp 
     src/database/databaseworker.cpp 
+    src/reportservices/monthlyreportservice.cpp 
 )
 
 # Header files
@@ -65,6 +67,7 @@ set(HEADERS
     include/dialogs/usersettingsdialog.h
     include/database/databasemanager.h
     include/database/databaseworker.h
+    include/reportservices/monthlyreportservice.h
 )
     
 
@@ -102,6 +105,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/views
     ${CMAKE_CURRENT_SOURCE_DIR}/include/dialogs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/database
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/reportservices
     )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
