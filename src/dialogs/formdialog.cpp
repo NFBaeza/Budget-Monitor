@@ -14,31 +14,34 @@ FormDialog::FormDialog(QWidget *parent)
     categoryModel = DatabaseManager::instance().getCategoryModel(this);
     accountModel = DatabaseManager::instance().getAccountModel(this);
 
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
-    connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
     ui->DateTimeSelected->setDate(QDate::currentDate());
+    setupConnections();
     initView();
 }
 
 FormDialog::FormDialog(int transactionId, QWidget *parent)
     : QDialog(parent),
       ui(new Ui::FormDialog),
-      editingTransactionId(transactionId) {
-
+      editingTransactionId(transactionId)
+{
     ui->setupUi(this);
     ui->DeleteButton->setVisible(true);
 
     categoryModel = DatabaseManager::instance().getCategoryModel(this);
     accountModel = DatabaseManager::instance().getAccountModel(this);
 
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
+    setupConnections();
     connect(ui->DeleteButton, &QPushButton::pressed, this, &FormDialog::onDeleteClicked);
-    connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
 
     initView();
     loadTransactionData(transactionId);
+}
+
+void FormDialog::setupConnections()
+{
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
+    connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
 }
 
 FormDialog::~FormDialog() {
@@ -85,39 +88,26 @@ void FormDialog::onDeleteClicked() {
 
 void FormDialog::loadTransactionData(int transactionId) {
     // Keep synchronous on UI thread — single-row SELECT at dialog open
-    QSqlQuery query(db);
-    query.prepare("SELECT date, amount, category_id, account_id, description "
-                  "FROM money_transactions WHERE id = :id AND user_id = :user_id");
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+    query.prepare("SELECT t.date, t.amount, t.category_id, t.account_id, t.description, c.type "
+                  "FROM money_transactions t "
+                  "JOIN categories c ON c.id = t.category_id "
+                  "WHERE t.id = :id AND t.user_id = :user_id");
     query.bindValue(":id", transactionId);
     query.bindValue(":user_id", user_id);
 
     if (query.exec() && query.next()) {
-        QString dateStr = query.value("date").toString();
-        QDateTime dateTime = QDateTime::fromString(dateStr, Qt::ISODate);
-        ui->DateTimeSelected->setDateTime(dateTime);
+        ui->DateTimeSelected->setDateTime(QDateTime::fromString(query.value("date").toString(), Qt::ISODate));
+        ui->InputAmountText->setText(QString::number(query.value("amount").toInt()));
+        ui->DescriptionText->setText(query.value("description").toString());
 
-        int amount = query.value("amount").toInt();
-        ui->InputAmountText->setText(QString::number(amount));
-
-        QString description = query.value("description").toString();
-        ui->DescriptionText->setText(description);
-
-        int categoryId = query.value("category_id").toInt();
-        int accountId = query.value("account_id").toInt();
-
-        QSqlQuery typeQuery(db);
-        typeQuery.prepare("SELECT type FROM categories WHERE id = :id AND user_id = :user_id");
-        typeQuery.bindValue(":id", categoryId);
-        typeQuery.bindValue(":user_id", user_id);
-        if (typeQuery.exec() && typeQuery.next()) {
-            QString type = typeQuery.value("type").toString();
-            if (type == "income") {
-                ui->IncomeRadioButton->setChecked(true);
-            } else {
-                ui->ExpenseRadioButton->setChecked(true);
-            }
+        if (query.value("type").toString() == "income") {
+            ui->IncomeRadioButton->setChecked(true);
+        } else {
+            ui->ExpenseRadioButton->setChecked(true);
         }
 
+        int categoryId = query.value("category_id").toInt();
         for (int i = 0; i < categoryModel->rowCount(); ++i) {
             if (categoryModel->index(i, 0).data().toInt() == categoryId) {
                 ui->ListCategoryDialog->setCurrentIndex(i);
@@ -125,6 +115,7 @@ void FormDialog::loadTransactionData(int transactionId) {
             }
         }
 
+        int accountId = query.value("account_id").toInt();
         for (int i = 0; i < accountModel->rowCount(); ++i) {
             if (accountModel->index(i, 0).data().toInt() == accountId) {
                 ui->ListAccountDialog->setCurrentIndex(i);
@@ -166,8 +157,10 @@ void FormDialog::initView(){
 // ==================== OK / CANCEL ====================
 
 void FormDialog::onAcceptClicked() {
-    if (ui->InputAmountText->text().isEmpty() || ui->DateTimeSelected->text().isEmpty()) {
-        QMessageBox::warning(this, "Error", "Please fill all the options");
+    bool ok;
+    int amount = ui->InputAmountText->text().toInt(&ok);
+    if (!ok || amount <= 0) {
+        QMessageBox::warning(this, "Error", "Please enter a valid amount greater than 0");
         return;
     }
 
@@ -178,20 +171,20 @@ void FormDialog::onAcceptClicked() {
     int accountId = accountModel->index(accountRow, 0).data().toInt();
 
     QString date = ui->DateTimeSelected->dateTime().toString("yyyy-MM-dd HH:mm:ss");
-    
-    int amount = ui->InputAmountText->text().toDouble();
-    
     QString description = ui->DescriptionText->text();
 
     setButtonsEnabled(false);
-    
-    auto *worker = DatabaseManager::instance().worker();
 
+    auto *worker = DatabaseManager::instance().worker();
     QString opName = (editingTransactionId != -1) ? "updateTransaction" : "insertTransaction";
 
     connect(worker, &DatabaseWorker::operationFinished, this, [this, opName](const QString &op) {
         if (op == opName) {
-            op == "updateTransaction" ? emit dataUpdated() :  emit dataInserted();
+            if (editingTransactionId != -1) {
+                emit dataUpdated();
+            } else {
+                emit dataInserted();
+            }
             accept();
         }
     }, Qt::SingleShotConnection);
