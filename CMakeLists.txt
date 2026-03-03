@@ -16,6 +16,19 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Sql Charts Network)
 
+# Fetch Google Test (Same as before)
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+# Link the tests directory
+add_subdirectory(tests)
+
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/widgets)
@@ -36,7 +49,7 @@ set(SOURCES
     src/dialogs/monthselectordialog.cpp
     src/dialogs/usersettingsdialog.cpp
     src/database/databasemanager.cpp 
-    src/database/databaseworker.cpp   
+    src/database/databaseworker.cpp 
 )
 
 # Header files
@@ -97,6 +110,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Charts
     Qt6::Network
     XLSXREADER
+    gtest
 )
 
 # Copy .env to build directory if it exists
