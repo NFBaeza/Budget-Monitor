@@ -3,6 +3,7 @@
 
 #include "database/databasemanager.h"
 #include "widgets/monthreportwidget.h"
+#include "reportservices/monthlyreportservice.h"
 #include <iostream>
 #include <QWidget>
 #include <QLabel>
@@ -18,6 +19,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QMap>
+#include <QVector>
 #include <QLayout>
 #include <QSqlRecord>
 #include <QSqlQuery>
@@ -27,9 +29,7 @@ namespace Ui {
     class SavingView;
 
     struct MONEY{
-        int expenses=0;
-        int incomes=0;
-        int saving=0;
+        MonthlyReportService::Totals totals;
         QString date;
     }; 
 }
@@ -62,10 +62,12 @@ private:
     QSqlTableModel *incomeModel{nullptr};
     QSqlTableModel *expenseModel{nullptr};
     QSqlRelationalTableModel *transactionsModel{nullptr};
-    std::vector<Ui::MONEY> money_by_month;
+    int numberOfMonthInAYear = 12;
+
+    QVector<Ui::MONEY> moneyByMonth;
 
     void initView();
-    void getAmountByMonth(const QString firstDate, const QString lastDate);
+    void getAmountByMonth(const QString firstDate);
     void updateBarGraph();
     void updateSummary();
 };
