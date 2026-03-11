@@ -9,7 +9,6 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QDateTime>
-#include <QMessageBox>
 #include <QNetworkAccessManager>
 
 QT_BEGIN_NAMESPACE
@@ -29,6 +28,7 @@ private slots:
     void showMainView();
     void onPastMonthsButtonPressed();
     void onUserSettingsPressed();
+    void onCreditCardButtonPressed();
     
 private:
     Ui::MainWindow *ui;
