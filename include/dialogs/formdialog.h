@@ -39,12 +39,12 @@ private slots:
 
 private:
     Ui::FormDialog *ui;
-    QSqlDatabase& db = DatabaseManager::instance().getDatabase();
     QSqlTableModel *categoryModel{nullptr};
     QSqlTableModel *accountModel{nullptr};
     int editingTransactionId = -1;
-    void loadTransactionData(int transactionId);
 
+    void setupConnections();
+    void loadTransactionData(int transactionId);
     void initView();
     void updateComboText();
     void setButtonsEnabled(bool enabled);

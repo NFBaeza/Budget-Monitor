@@ -249,6 +249,12 @@
    <header>qchartview.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>graphicsView</tabstop>
+  <tabstop>tableBreakdownWidget</tabstop>
+  <tabstop>backToMenu</tabstop>
+  <tabstop>backToSavingButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

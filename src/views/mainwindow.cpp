@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
     setMinimumSize(470, 300);
     ui->userNameLabel->setVisible(false);
 
+    ui->labelTitle->setStyleSheet("font-size: 13pt");
+
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
@@ -48,13 +50,13 @@ void MainWindow::onUserSettingsPressed() {
 void MainWindow::onPastMonthsButtonPressed() {
     if(!user_id.isEmpty()){
         MonthSelectorDialog *dialog = new MonthSelectorDialog(this);
-        connect(dialog, &MonthSelectorDialog::month_clicked, this, [this](QDate date) {
+        connect(dialog, &MonthSelectorDialog::monthClicked, this, [this](QDate date) {
             MonthView *monthView = new MonthView(date, this);
             connect(monthView, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
             setMinimumSize(1080, 650);
             setCentralWidget(monthView);
         });
-        connect(dialog, &MonthSelectorDialog::close_was_pressed, this, &MainWindow::showMainView);
+        connect(dialog, &MonthSelectorDialog::closeWasPressed, this, &MainWindow::showMainView);
         setCentralWidget(dialog);
     }else{
         QMessageBox::warning(this, "Error", "Please login first");
@@ -85,7 +87,7 @@ void MainWindow::onCurrentMonthPressed() {
     if(!user_id.isEmpty()){
         MonthView *dashboard = new MonthView(QDate::currentDate(), this);
         connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-        resize(1080, 650);
+        resize(1150, 700);
         setCentralWidget(dashboard);
     }else{
         QMessageBox::warning(this, "Error", "Please login first");

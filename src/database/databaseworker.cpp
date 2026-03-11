@@ -156,6 +156,8 @@ void DatabaseWorker::updateTransaction(int id, const QString &userId, const QStr
                   "SET user_id = :user_id, date = :date, amount = :amount, category_id = :category, "
                   "account_id = :account, description = :description "
                   "WHERE id = :id");
+    // NOTE: original_description is intentionally NOT updated here — it is immutable
+    //       and used for duplicate detection on re-import.
     query.bindValue(":id", id);
     query.bindValue(":user_id", userId);
     query.bindValue(":date", date);
@@ -267,16 +269,18 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
             accountCache[account] = accountId;
         }
 
-        // Insert transaction
+        // Insert transaction (skip silently if duplicate based on original_description)
         QSqlQuery insertQuery(m_db);
-        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
-                            "VALUES (:user, :date, :amount, :category, :account, :description)");
+        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
+                            "VALUES (:user, :date, :amount, :category, :account, :description, :original_description) "
+                            "ON CONFLICT (user_id, date, amount, account_id, original_description) DO NOTHING");
         insertQuery.bindValue(":user", userId);
         insertQuery.bindValue(":date", date);
         insertQuery.bindValue(":amount", amount);
         insertQuery.bindValue(":category", categoryId);
         insertQuery.bindValue(":account", accountId);
         insertQuery.bindValue(":description", description);
+        insertQuery.bindValue(":original_description", description);
 
         if (!insertQuery.exec()) {
             emit operationError("bulkImport", insertQuery.lastError().text());

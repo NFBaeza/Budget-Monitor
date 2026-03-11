@@ -19,14 +19,15 @@ public:
     ~MonthSelectorDialog();
     void done(int result) override;
 
-    //QString getDate() const;
-
 signals:
-    void close_was_pressed();
-    void month_clicked(QDate date);
+    void closeWasPressed();
+    void monthClicked(QDate date);
 
 private:
     Ui::MonthSelectorDialog *ui;
+    static constexpr int numberOfMonthInAYear = 12;
+
+    QVector<QPushButton*> m_buttons = QVector<QPushButton*>(numberOfMonthInAYear);
 
     void onButtonClicked(QDate date);
     void initView(QDate date);

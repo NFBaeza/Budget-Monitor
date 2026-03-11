@@ -67,6 +67,8 @@ The application uses three main tables (all scoped per user):
 - Qt 6.x or higher
 - CMake 3.10 or higher
 - C++17 compatible compiler
+- A [Supabase](https://supabase.com/) project (for authentication and database)
+
 ### Build Steps
 
 ```bash
@@ -80,11 +82,46 @@ git submodule update
 # then
 
 cd budget_monitor
+```
 
+### Configure environment
+
+Copy the example file and fill in your Supabase credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your values:
+
+```env
+# Database connection (Supabase PostgreSQL)
+DB_HOST=your-project.supabase.co
+DB_PORT=6543
+DB_NAME=postgres
+DB_USER=postgres.your-project-ref
+DB_PASSWORD=your-db-password
+
+# Supabase authentication
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
+
+You can find these values in your Supabase dashboard under **Project Settings > Database** and **Project Settings > API**.
+
+### Set up the database
+
+Run the SQL migration script in your Supabase SQL Editor (**Dashboard > SQL Editor > New query**):
+
+Copy and paste the contents of [`sql/setup.sql`](sql/setup.sql), then click **Run**. This creates the required tables (`categories`, `accounts`, `money_transactions`).
+
+### Build and run
+
+```bash
 # Create build directory
 mkdir build && cd build
 
-# Configure with CMake
+# Configure with CMake (this also copies .env into the build directory)
 cmake ..
 
 # Build the project

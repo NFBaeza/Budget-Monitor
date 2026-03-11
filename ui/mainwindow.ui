@@ -61,11 +61,23 @@
           <height>100</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="text">
-         <string>Current Month</string>
+         <string> Current Month</string>
         </property>
         <property name="icon">
-         <iconset theme="QIcon::ThemeIcon::AppointmentNew"/>
+         <iconset>
+          <normaloff>:/imgs/monthly-reporting.png</normaloff>:/imgs/monthly-reporting.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>35</width>
+          <height>35</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -195,11 +207,12 @@
         </property>
         <property name="font">
          <font>
+          <italic>true</italic>
           <bold>true</bold>
          </font>
         </property>
         <property name="text">
-         <string>TextLabel</string>
+         <string>Please Login</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -235,6 +248,12 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>userSettingsButton</tabstop>
+  <tabstop>CurrentMonthButton</tabstop>
+  <tabstop>SavingViewButton</tabstop>
+  <tabstop>pastMonthsButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -2,6 +2,7 @@
 #define DASHBOARDWIDGET_H
 
 #include "database/databasemanager.h"
+#include "reportServices/monthlyreportservice.h"
 #include <QWidget>
 #include <QLabel>
 #include <QSqlRecord>
@@ -17,6 +18,7 @@
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QMap>
+#include <time.h>
 #include <QDateTime>
 
 namespace Ui { class MonthView; }
@@ -25,14 +27,7 @@ class MonthView : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MonthView(QDate date_selected, QWidget *parent = nullptr);
-    QString month_name_;
-    QDate dateViewSelected;
-    int totalIncomes = 0.0;
-    int totalExpenses = 0.0;
-    int savings =0.0;
-    QMap<QString, int> amountByCategoryMap;
-    QString MonthFilter;
+    explicit MonthView(QDate dateSelected, QWidget *parent = nullptr);
     ~MonthView();
 
 signals:
@@ -42,26 +37,38 @@ private slots:
     void backButtonWasPressed();
     void onAddButtonClicked();
     void onTableRowDoubleClicked(const QModelIndex &index);
-    void onEditButtonCliked();
+    void onEditButtonClicked();
 
 private:
     Ui::MonthView *ui;
-    QSqlTableModel *categoryModel{nullptr};
-    QSqlTableModel *incomesModel{nullptr};
-    QSqlTableModel *expensesModel{nullptr};
+    MonthlyReportService ReportService;
     QSqlRelationalTableModel *transactionModel{nullptr};
+    
+    QPair<QDate, QDate> monthDateRange() const;
+    QString monthFilter;
+    QString monthName;
+    QDate dateViewSelected;
 
-    void setAmountByCategory();
-    void updateLabelsFromFilter(QSqlTableModel *model, const QString &labelPrefix);
+    int numberOfCreditCards = 0;
+    int maxNumberOfCreditCardsCanDisplay = 3;
+    int numberOfLabelPerCreditCard = 7;
+    
+    MonthlyReportService::Totals totals;
+    QMap<QString, int> amountByCategoryMap;
+
+    QStringList labels = {"name","Used Credit","0","Available Credit","0","Limit Credit","0"};
+    QVector<QLabel*> m_labels;
+    QMap<QString, QLabel*> m_labelCache;
+
+    void updateLabelsFromFilter(const QString type);
     void updateTransactions();
     void initView();
     void updatePieChart();
     void updateSummary();
     void updateCategories();
     void updateView();
-    void onAddFileButtonCliked();
-
-    QString getTypeFromCategory(const QString& category);
+    void onAddFileButtonClicked();
+    void updateCreditReview();
 };
 
 #endif
