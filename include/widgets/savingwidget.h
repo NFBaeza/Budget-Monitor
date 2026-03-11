@@ -30,6 +30,7 @@ namespace Ui {
 
     struct MONEY{
         MonthlyReportService::Totals totals;
+        QMap<QString, MonthlyReportService::Totals> cards;
         QString date;
     }; 
 }

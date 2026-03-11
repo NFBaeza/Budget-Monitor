@@ -34,9 +34,13 @@ void SavingView::backButtonWasPressed(){
 
 void SavingView::updateSummary(){
     int totalSavings = 0;
+    
     for(int i_month = 0; i_month < numberOfMonthInAYear; i_month++){
-        qDebug() <<"Saving month: "<< i_month<<" "<<moneyByMonth[i_month].totals.savings;
-        totalSavings += moneyByMonth[i_month].totals.savings;
+        for(const auto [card, amount] : moneyByMonth[i_month].cards.asKeyValueRange()){
+            qDebug() <<"Saving month: "<< i_month<<" "<<card<<amount.incomes-amount.expenses;
+            totalSavings += (amount.incomes-amount.expenses);
+            moneyByMonth[i_month].totals.savings = (amount.incomes-amount.expenses);
+        }
     }
        
     if(totalSavings < 0){
@@ -53,14 +57,17 @@ void SavingView::updateSummary(){
     };
 
     auto it_max = std::max_element(moneyByMonth.begin(), moneyByMonth.end(), compareBySaving);
-    ui->labelHigherAmount->setText(QString::number((it_max->totals.savings < 0) ? 0 : (it_max->totals.savings)));
+    ui->labelHigherAmount->setText(locale().toString((it_max->totals.savings < 0) ? 0.0 : it_max->totals.savings, 'f', 0));
 
     auto it_min = std::min_element(moneyByMonth.begin(), moneyByMonth.end(), compareBySaving);
-    ui->labelLowerAmount->setText(QString::number((it_min->totals.savings < 0) ? 0 : (it_min->totals.savings)));
+    ui->labelLowerAmount->setText(locale().toString((it_min->totals.savings < 0) ? 0.0 : it_min->totals.savings, 'f', 0));
+
 
     int total_incomes = 0;
-    for(const auto &money: moneyByMonth){
-        total_incomes+=money.totals.incomes;
+    for(int i_month = 0; i_month < numberOfMonthInAYear; i_month++){
+        for(const auto [card, amount] : moneyByMonth[i_month].cards.asKeyValueRange()){
+            total_incomes += amount.incomes;
+        }
     }
 
     double ratio = ((double)(totalSavings) / std::abs(total_incomes)) * 100.0;
@@ -78,18 +85,15 @@ void SavingView::updateSummary(){
 
 void SavingView::updateBarGraph(){
     QBarSet *savingsSet = new QBarSet("Savings");
-    //QBarSet *expensesSet = new QBarSet("Expenses");
     QStringList monthsList;
 
     for (auto it = moneyByMonth.rbegin(); it != moneyByMonth.rend(); ++it) {
         *savingsSet << it->totals.savings;
-        //*expensesSet << it->expenses;
         monthsList << QDate::fromString(it->date, "yyyy-MM-dd").toString("MM-yy");
     }
 
     QBarSeries *series = new QBarSeries();
     series->append(savingsSet);
-    //series->append(expensesSet);
 
     QChart *chart = new QChart();
     savingsSet->setBrush(QBrush(QColor("#a0eb74cc")));
@@ -133,10 +137,10 @@ void SavingView::initView() {
     for(int i_month = 0; i_month < 12; i_month++){
         MonthlyReportService service(initDate, user_id);
 
-        QString date = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");
-        
+        QString date = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");       
         transactionsModel->select();
 
+        moneyByMonth[i_month].cards = service.getAmountByTypeCard("debit");
         moneyByMonth[i_month].totals = service.getComputeTotals(service.getAmountByCategory());
         moneyByMonth[i_month].date = date;
 

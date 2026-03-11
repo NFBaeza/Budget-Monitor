@@ -67,9 +67,9 @@ QMap<QString, int> MonthlyReportService::getAmountByCategory() const
     return result;
 }
 
-QMap<QString, Totals> MonthlyReportService::getAmountByTypeCard(QString type_of_card) const
+QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getAmountByTypeCard(QString type_of_card) const
 {
-    QMap<QString, Totals> response;
+    QMap<QString, MonthlyReportService::Totals> response;
     QSqlQuery query(DatabaseManager::instance().getDatabase());
 
     if (!query.prepare("SELECT a.name, c.type, SUM(t.amount) "
@@ -79,7 +79,7 @@ QMap<QString, Totals> MonthlyReportService::getAmountByTypeCard(QString type_of_
                        "WHERE t.date >= :start AND t.date <= :end "
                        "AND t.user_id = :user "
                        "AND a.type = :type "
-                       "GROUP BY c.type")) {
+                       "GROUP BY a.name, c.type")) {
         qDebug() << "[calculateMonthlyExpenses] PREPARE ERROR:" << query.lastError().text();
         return response;
     }
@@ -88,7 +88,7 @@ QMap<QString, Totals> MonthlyReportService::getAmountByTypeCard(QString type_of_
     query.bindValue(":start", first.toString("yyyy-MM-dd"));
     query.bindValue(":end",   last.toString("yyyy-MM-dd"));
     query.bindValue(":user",  m_userId);
-    query.bindValue(":type",  type);
+    query.bindValue(":type",  type_of_card);
 
     if (query.exec()) {
         while (query.next()) {
