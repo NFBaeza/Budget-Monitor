@@ -52,7 +52,8 @@ set(SOURCES
     src/dialogs/usersettingsdialog.cpp
     src/database/databasemanager.cpp 
     src/database/databaseworker.cpp 
-    src/reportservices/monthlyreportservice.cpp 
+    src/reportservices/monthlyreportservice.cpp
+
 )
 
 # Header files

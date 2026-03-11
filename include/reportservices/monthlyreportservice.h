@@ -32,9 +32,10 @@ public:
     ~MonthlyReportService();
 
     QMap<QString, int>   getAmountByCategory() const;
+    QMap<QString, Totals>getAmountByTypeCard(QString type_of_card) const;
     Totals               getComputeTotals(const QMap<QString, int> &amountByCategory) const;
     QList<CreditSummary> getCreditSummaries(int maxCards = 3) const;
-    QString              getCategoryType(const QString &categoryName) const;
+    QString              getCategoryType(const QString &categoryName) const; 
     int                  getCreditCardNumber() const;
 
 private:
