@@ -67,6 +67,44 @@ QMap<QString, int> MonthlyReportService::getAmountByCategory() const
     return result;
 }
 
+QMap<QString, Totals> MonthlyReportService::getAmountByTypeCard(QString type_of_card) const
+{
+    QMap<QString, Totals> response;
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+
+    if (!query.prepare("SELECT a.name, c.type, SUM(t.amount) "
+                       "FROM money_transactions t "
+                       "JOIN categories c ON t.category_id = c.id "
+                       "JOIN accounts a ON t.account_id = a.id "
+                       "WHERE t.date >= :start AND t.date <= :end "
+                       "AND t.user_id = :user "
+                       "AND a.type = :type "
+                       "GROUP BY c.type")) {
+        qDebug() << "[calculateMonthlyExpenses] PREPARE ERROR:" << query.lastError().text();
+        return response;
+    }
+
+    auto [first, last] = dateRange();
+    query.bindValue(":start", first.toString("yyyy-MM-dd"));
+    query.bindValue(":end",   last.toString("yyyy-MM-dd"));
+    query.bindValue(":user",  m_userId);
+    query.bindValue(":type",  type);
+
+    if (query.exec()) {
+        while (query.next()) {
+            QString name = query.value(0).toString();           
+            if(query.value(1).toString() == "expense"){
+                response[name].expenses = query.value(2).toInt();
+            } else {
+                response[name].incomes = query.value(2).toInt();
+            }
+        }
+    } else {
+        qDebug() << "[MonthlyReportService::amountByCategory] ERROR:" << query.lastError().text();
+    }
+    return response;
+}
+
 MonthlyReportService::Totals MonthlyReportService::getComputeTotals(const QMap<QString, int> &amountByCategory) const
 {
     Totals totals;
