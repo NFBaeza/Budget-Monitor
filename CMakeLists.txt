@@ -39,6 +39,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/reportservices)
 
 
 set(SOURCES
+    src/appstate.cpp
     src/main.cpp
     src/views/mainwindow.cpp
     src/widgets/dashboardwidget.cpp
@@ -56,6 +57,7 @@ set(SOURCES
 
 # Header files
 set(HEADERS
+    include/appstate.h
     include/views/mainwindow.h
     include/widgets/dashboardwidget.h
     include/widgets/savingwidget.h

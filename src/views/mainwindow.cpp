@@ -113,18 +113,11 @@ void MainWindow::showMainView() {
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
 
-    if(user_name.isEmpty()){
-        UserSettingsDialog::tryAutoLogin(m_networkManager, [this](bool success) {
-        if (success) {
-            ui->userNameLabel->setText(user_name);
-            ui->userNameLabel->setVisible(true);
-            qDebug() << "Session restored from saved token";
-        }
-        });
-    }else{
+    if(!user_name.isEmpty()){
         ui->userNameLabel->setText(user_name);
-        ui->userNameLabel->setVisible(true);
+    }else{
+        ui->userNameLabel->setText("Please Logging");
     }
-    
+
 }
     
