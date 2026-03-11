@@ -67,7 +67,7 @@ QMap<QString, int> MonthlyReportService::getAmountByCategory() const
     return result;
 }
 
-QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getAmountByTypeCard(QString type_of_card) const
+QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getAmountByTypeCard(const QString &type_of_card, const QDate &month) const
 {
     QMap<QString, MonthlyReportService::Totals> response;
     QSqlQuery query(DatabaseManager::instance().getDatabase());
@@ -84,7 +84,9 @@ QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getAmountByTyp
         return response;
     }
 
-    auto [first, last] = dateRange();
+    const QDate &ref = month.isValid() ? month : m_month;
+    auto first = QDate(ref.year(), ref.month(), 1);
+    auto last  = QDate(ref.year(), ref.month(), ref.daysInMonth());
     query.bindValue(":start", first.toString("yyyy-MM-dd"));
     query.bindValue(":end",   last.toString("yyyy-MM-dd"));
     query.bindValue(":user",  m_userId);
