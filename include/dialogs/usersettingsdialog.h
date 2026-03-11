@@ -38,6 +38,7 @@ public:
 
 signals:
     void backToMain();
+    void userNameChanged(const QString &name);
 
 private:
     Ui::userSettingsDialog *ui;
@@ -50,6 +51,12 @@ private:
     void signinWithSupabase(const QString &name, const QString &email, const QString &password, const QDate &birthday);
     void loginWithSupabase(const QString &email, const QString &password);
     void handleAuthResponse(const QString requestType, QNetworkReply *reply);
+    void updateEmailInSupabase(const QString &newEmail);
+    void updateNameInSupabase(const QString &newName);
+    void onChangeNameButtonPressed();
+    void onChangeEmailButtonPressed();
+    void onEraseAccountButtonPressed();
+    QNetworkReply* makeAuthenticatedPut(const QJsonObject &body);
 };
 
 #endif
