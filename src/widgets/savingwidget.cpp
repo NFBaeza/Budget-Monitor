@@ -13,13 +13,33 @@ SavingView::SavingView(QWidget *parent)
       ui(new Ui::SavingView) {
 
     ui->setupUi(this);
-    this->setFixedSize(1080, 650);
+    setMinimumSize(1080, 650);
 
     transactionsModel = DatabaseManager::instance().getTransactionsModel(this);
 
     ui->titleLabel->setStyleSheet("font-size: 16pt");
     
     connect(ui->backButton, &QPushButton::clicked, this, &SavingView::backButtonWasPressed);
+
+    connect(ui->threeMonthsViewRadioButton, &QRadioButton::clicked, this,[this](){
+        numberOfMonthInAYear = 3;
+        initView();
+    });
+
+    connect(ui->sixMonthsViewRadioButton, &QRadioButton::clicked, this,[this](){
+        numberOfMonthInAYear = 6;
+        initView();
+    });
+
+    connect(ui->nineMonthsViewRadioButton, &QRadioButton::clicked, this,[this](){
+        numberOfMonthInAYear = 9;
+        initView();
+    });
+
+    connect(ui->twelveMonthsViewRadioButton, &QRadioButton::clicked, this,[this](){
+        numberOfMonthInAYear = 12;
+        initView();
+    });
     
     initView();
 }
@@ -132,7 +152,7 @@ void SavingView::initView() {
 
     QDate initDate = QDate::currentDate();
 
-    for(int i_month = 0; i_month < 12; i_month++){
+    for(int i_month = 0; i_month < numberOfMonthInAYear; i_month++){
         MonthlyReportService service(initDate, user_id);
 
         QString date = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");       
