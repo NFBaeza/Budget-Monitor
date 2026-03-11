@@ -37,14 +37,12 @@ void SavingView::updateSummary(){
     
     for(int i_month = 0; i_month < numberOfMonthInAYear; i_month++){
         for(const auto [card, amount] : moneyByMonth[i_month].cards.asKeyValueRange()){
-            qDebug() <<"Saving month: "<< i_month<<" "<<card<<amount.incomes-amount.expenses;
             totalSavings += (amount.incomes-amount.expenses);
             moneyByMonth[i_month].totals.savings = (amount.incomes-amount.expenses);
         }
     }
        
     if(totalSavings < 0){
-        qDebug()<<"total Saving: "<< totalSavings;
         ui->labelTotalAmount->setText("0");
     }else{
         ui->labelTotalAmount->setText(locale().toString(totalSavings));
