@@ -110,5 +110,12 @@ void MainWindow::showMainView() {
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
+
+    if(!user_name.isEmpty()){
+        ui->userNameLabel->setText(user_name);
+    }else{
+        ui->userNameLabel->setText("Please Logging");
+    }
+
 }
     

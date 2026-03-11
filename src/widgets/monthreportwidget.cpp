@@ -22,7 +22,7 @@ MonthReport::MonthReport(QDate dateSelected, QWidget *parent)
     QString month_name = QLocale().monthName(date.month());
     month_name[0] = month_name[0].toUpper();
     ui->titleMonthLabel->setText(QString("%1 %2").arg(month_name).arg(date.year()));
-
+    ui->titleMonthLabel->setStyleSheet("font-size: 16pt");
     getTotalIncomeExpenseAmount(date);
     createPieChart();
     getExpenseBreakdown(date);
@@ -30,6 +30,7 @@ MonthReport::MonthReport(QDate dateSelected, QWidget *parent)
 }
 
 void MonthReport::getTotalIncomeExpenseAmount(QDate date){
+    QLocale locale(QLocale::German);
     QString lastDate = QDate(date.year(), date.month(), date.daysInMonth()).toString("yyyy-MM-dd");
     QSqlDatabase db = DatabaseManager::instance().getDatabase();
     QSqlQuery query(db);
@@ -57,11 +58,11 @@ void MonthReport::getTotalIncomeExpenseAmount(QDate date){
         qDebug() << "[setAmountByCategory] ERROR:" << query.lastError().text();
     }
 
-    totalSavings = totalIncomes - totalExpenses;
+    totalSavings = (totalIncomes - totalExpenses > 0) ? totalIncomes - totalExpenses : 0;
     
-    ui->totalExpensesAmount->setText(QString::number(totalIncomes));
-    ui->totalIncomesAmount->setText(QString::number(totalExpenses));
-    ui->totalSavingsAmount->setText(QString::number(totalSavings));
+    ui->totalExpensesAmount->setText(locale.toString(totalExpenses));
+    ui->totalIncomesAmount->setText(locale.toString(totalIncomes));
+    ui->totalSavingsAmount->setText(locale.toString(totalSavings));
 }
 
 
@@ -97,6 +98,7 @@ void MonthReport::createPieChart() {
 }
 
 void MonthReport::getExpenseBreakdown(QDate date){
+    QLocale locale(QLocale::German);
     QString lastDate = QDate(date.year(), date.month(), date.daysInMonth()).toString("yyyy-MM-dd");
     QSqlDatabase db = DatabaseManager::instance().getDatabase();
     QSqlQuery query(db);
@@ -125,8 +127,8 @@ void MonthReport::getExpenseBreakdown(QDate date){
             float percentOfExpenses = (total*100)/totalExpenses;
 
             ui->tableBreakdownWidget->setItem(row, 0, new QTableWidgetItem(category));
-            ui->tableBreakdownWidget->setItem(row, 1, new QTableWidgetItem(QString::number(total)));
-            ui->tableBreakdownWidget->setItem(row, 2, new QTableWidgetItem(QString::number(percentOfExpenses, 'f', 1) + "%"));  
+            ui->tableBreakdownWidget->setItem(row, 1, new QTableWidgetItem(locale.toString(total)));
+            ui->tableBreakdownWidget->setItem(row, 2, new QTableWidgetItem(locale.toString(percentOfExpenses, 'f', 1) + "%"));  
             row++;       
         }
     } else {

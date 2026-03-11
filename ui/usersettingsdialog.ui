@@ -263,18 +263,55 @@
       <zorder>warningPasswordLabel</zorder>
      </widget>
      <widget class="QWidget" name="userWidget">
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="0">
-        <widget class="QPushButton" name="editSettingsButton">
+      <layout class="QGridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
+       <property name="sizeConstraint">
+        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+       </property>
+       <property name="topMargin">
+        <number>30</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>25</number>
+       </property>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="editEmailButton">
          <property name="text">
-          <string>Edit Category and Accounts</string>
+          <string>Change Email</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="editNameButton">
+         <property name="text">
+          <string>Change Name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QPushButton" name="logOutButton">
+         <property name="text">
+          <string>Log out</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QPushButton" name="logoutButton">
+        <widget class="QPushButton" name="editAccountButton">
          <property name="text">
-          <string>Log out</string>
+          <string>Edit Accounts</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QPushButton" name="editCategoryButton">
+         <property name="text">
+          <string>Edit Categories</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QPushButton" name="eraseAccountButton">
+         <property name="text">
+          <string>Erase Account</string>
          </property>
         </widget>
        </item>
