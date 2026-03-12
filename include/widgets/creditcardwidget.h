@@ -2,10 +2,15 @@
 #define CREDITCARDWIDGET_H
 
 #include "database/databasemanager.h"
+#include "reportservices/monthlyreportservice.h"
 #include <QDate>
+#include <QTableWidgetItem>
 #include <QMessageBox>
 #include <QDebug>
 #include <QLocale>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QChart>
+#include <QtCharts/QChartView>
 
 
 namespace Ui { class CreditCardWidget; }
@@ -19,9 +24,7 @@ public:
 
 signals:
     void backToMain();
-
-private slots:
-
+    void goToCurrentMonth(); 
 
 private:
     Ui::CreditCardWidget *ui;
@@ -30,6 +33,9 @@ private:
     QDate initDate;
 
     void initView();
+    void updatePieChart();
+    void updateSummary();
+    void updateViewByComboBox();
 };
 
 #endif
