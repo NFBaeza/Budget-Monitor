@@ -15,6 +15,7 @@ FormDialog::FormDialog(QWidget *parent)
     accountModel = DatabaseManager::instance().getAccountModel(this);
 
     ui->DateTimeSelected->setDate(QDate::currentDate());
+
     setupConnections();
     initView();
 }
@@ -41,7 +42,6 @@ void FormDialog::setupConnections()
 {
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &FormDialog::onAcceptClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &FormDialog::onCancelClicked);
-    connect(ui->IncomeRadioButton, &QRadioButton::toggled, this, &FormDialog::updateComboText);
 }
 
 FormDialog::~FormDialog() {
@@ -101,12 +101,6 @@ void FormDialog::loadTransactionData(int transactionId) {
         ui->InputAmountText->setText(QString::number(query.value("amount").toInt()));
         ui->DescriptionText->setText(query.value("description").toString());
 
-        if (query.value("type").toString() == "income") {
-            ui->IncomeRadioButton->setChecked(true);
-        } else {
-            ui->ExpenseRadioButton->setChecked(true);
-        }
-
         int categoryId = query.value("category_id").toInt();
         for (int i = 0; i < categoryModel->rowCount(); ++i) {
             if (categoryModel->index(i, 0).data().toInt() == categoryId) {
@@ -126,19 +120,6 @@ void FormDialog::loadTransactionData(int transactionId) {
 }
 
 
-void FormDialog::updateComboText(){
-    if(ui->IncomeRadioButton->isChecked()){
-        categoryModel->setFilter(QString("type = 'income'AND user_id = '%1'").arg(user_id));
-    }else{
-        categoryModel->setFilter(QString("type = 'expense'AND user_id = '%1'").arg(user_id));
-    }
-
-    categoryModel->select();
-
-    ui->ListCategoryDialog->setModel(categoryModel);
-    ui->ListCategoryDialog->setModelColumn(2);
-}
-
 void FormDialog::initView(){
     if(editingTransactionId >= 0){
         ui->TitleFormDialog->setText("Edit Transaction");
@@ -146,10 +127,9 @@ void FormDialog::initView(){
         ui->TitleFormDialog->setText("Add new data");
     }
 
-    categoryModel->select();
-    updateComboText();
+    ui->ListCategoryDialog->setModel(categoryModel);
+    ui->ListCategoryDialog->setModelColumn(2);
 
-    accountModel->select();
     ui->ListAccountDialog->setModel(accountModel);
     ui->ListAccountDialog->setModelColumn(2);
 }
