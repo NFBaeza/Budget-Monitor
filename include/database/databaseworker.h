@@ -22,7 +22,7 @@ public slots:
     void deleteCategory(int id);
 
     // Account operations
-    void addAccount(const QString &userId, const QString &name);
+    void addAccount(const QString &userId, const QString &name, const QString &type);
     void updateAccount(int id, const QString &newName);
     void deleteAccount(int id);
 

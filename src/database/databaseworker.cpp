@@ -83,12 +83,13 @@ void DatabaseWorker::deleteCategory(int id)
 
 // ==================== ACCOUNT OPERATIONS ====================
 
-void DatabaseWorker::addAccount(const QString &userId, const QString &name)
+void DatabaseWorker::addAccount(const QString &userId, const QString &name, const QString &type)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO accounts (user_id, name) VALUES (:user, :method)");
-    query.bindValue(":method", name);
+    query.prepare("INSERT INTO accounts (user_id, name, type) VALUES (:user, :name, :type)");
     query.bindValue(":user", userId);
+    query.bindValue(":name", name);
+    query.bindValue(":type", type);
 
     if (!query.exec()) {
         emit operationError("addAccount", query.lastError().text());
