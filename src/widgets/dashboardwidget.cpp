@@ -3,6 +3,7 @@
 #include "./ui_dashboardwidget.h"
 #include "dialogs/formdialog.h"
 #include "dialogs/categorydialog.h"
+#include "dialogs/accountdialog.h"
 #include "dialogs/addingfiledialog.h"
 
 extern QString user_id;
@@ -28,6 +29,10 @@ MonthView::MonthView(QDate dateSelected, QWidget *parent) :
     connect(ui->AddEntryButton, &QPushButton::clicked, this, &MonthView::onAddButtonClicked);
     connect(ui->TableViewLastEntry, &QTableView::doubleClicked, this, &MonthView::onTableRowDoubleClicked);
     connect(ui->EditCategoryButton, &QPushButton::clicked, this, &MonthView::onEditButtonClicked);
+    connect(ui->EditAccountButton, &QPushButton::clicked, this, [this](){
+        AccountManager dialog(this);
+        dialog.exec();
+    });
     connect(ui->addFileButton, &QPushButton::clicked, this, &MonthView::onAddFileButtonClicked);
 
     initView();
