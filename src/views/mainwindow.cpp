@@ -3,6 +3,7 @@
 #include "widgets/dashboardwidget.h"
 #include "widgets/savingwidget.h"
 #include "widgets/monthreportwidget.h"
+#include "widgets/creditcardwidget.h"
 #include "dialogs/monthselectordialog.h"
 #include "dialogs/usersettingsdialog.h"
 
@@ -24,7 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
-
+    connect(ui->creditCardReviewButton, &QPushButton::clicked, this, &MainWindow::onCreditCardButtonPressed);
+    
     UserSettingsDialog::tryAutoLogin(m_networkManager, [this](bool success) {
         if (success) {
             ui->userNameLabel->setText(user_name);
@@ -83,7 +85,20 @@ void MainWindow::onSavingPressed() {
     }else{
         QMessageBox::warning(this, "Error", "Please login first");
         onUserSettingsPressed();
-    }   
+    }
+}
+
+void MainWindow::onCreditCardButtonPressed() {
+    if(!user_id.isEmpty()){
+        CreditCardView *dashboard = new CreditCardView(QDate::currentDate(), this);
+        connect(dashboard, &CreditCardView::backToMain, this, &MainWindow::showMainView);
+        setCentralWidget(dashboard);
+        setMinimumSize(dashboard->minimumSize());
+        resize(dashboard->minimumSize());
+    }else{
+        QMessageBox::warning(this, "Error", "Please login first");
+        onUserSettingsPressed();
+    }
 }
 
 void MainWindow::onCurrentMonthPressed() {
@@ -107,14 +122,15 @@ void MainWindow::showMainView() {
 
     // Restore the UI from the .ui file
     ui->setupUi(this);
-    setMinimumSize(470, 300);
-    adjustSize();
+    setMinimumSize(0, 0);
+    resize(470, 300);
 
     // Reconnect the button signals
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);
     connect(ui->SavingViewButton, &QPushButton::clicked, this, &MainWindow::onSavingPressed);
     connect(ui->pastMonthsButton, &QPushButton::clicked, this, &MainWindow::onPastMonthsButtonPressed);
     connect(ui->userSettingsButton, &QPushButton::clicked, this, &MainWindow::onUserSettingsPressed);
+    connect(ui->creditCardReviewButton, &QPushButton::clicked, this, &MainWindow::onCreditCardButtonPressed);
 
     if(!user_name.isEmpty()){
         ui->userNameLabel->setText(user_name);
