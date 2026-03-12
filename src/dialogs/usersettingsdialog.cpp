@@ -1,14 +1,15 @@
 #include "dialogs/usersettingsdialog.h"
 #include "database/databaseworker.h"
 #include "dialogs/categorydialog.h"
+#include "appstate.h"
 #include "./ui_usersettingsdialog.h"
 #include <QNetworkRequest>
 #include <QSslSocket>
 #include <QUrl>
-
-QString user_id = "";
-QString user_name = "";
-
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QDialogButtonBox>
 
 UserSettingsDialog::UserSettingsDialog(QWidget *parent)
     : QDialog(parent)
@@ -16,9 +17,10 @@ UserSettingsDialog::UserSettingsDialog(QWidget *parent)
     , m_networkManager(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
-    if(!user_id.isEmpty()){
+    QSettings s("BudgetMonitor", "BudgetMonitor");
+    if (!s.value("auth/user_id").toString().isEmpty()) {
         ui->userSettingsWidget->setCurrentWidget(ui->userWidget);
-    }else{
+    } else {
         ui->userSettingsWidget->setCurrentWidget(ui->logInWidget);
     }
     
@@ -34,7 +36,7 @@ UserSettingsDialog::UserSettingsDialog(QWidget *parent)
         ui->userSettingsWidget->setCurrentWidget(ui->logInWidget);
     });
 
-    connect(ui->logoutButton, &QPushButton::clicked, this, [this](){
+    connect(ui->logOutButton, &QPushButton::clicked, this, [this](){
         logout();
         emit backToMain();
     });
@@ -46,11 +48,19 @@ UserSettingsDialog::UserSettingsDialog(QWidget *parent)
     connect(ui->passwordUserSignUpText, &QLineEdit::editingFinished, this, &UserSettingsDialog::checkSigninPassword);
     connect(ui->passwordUserSignUpText_2, &QLineEdit::editingFinished, this, &UserSettingsDialog::checkSigninPassword);
 
-    connect(ui->editSettingsButton, &QPushButton::pressed, this, [this](){
+    connect(ui->editCategoryButton, &QPushButton::pressed, this, [this](){
         CategoryDialog dialog(this);
         dialog.exec();
     });
 
+    connect(ui->editAccountButton, &QPushButton::pressed, this, [this](){
+        CategoryDialog dialog(this);
+        dialog.exec();
+    });
+
+    connect(ui->editEmailButton, &QPushButton::pressed, this, &UserSettingsDialog::onChangeEmailButtonPressed);
+    connect(ui->editNameButton, &QPushButton::pressed, this, &UserSettingsDialog::onChangeNameButtonPressed);
+    connect(ui->eraseAccountButton, &QPushButton::pressed, this, &UserSettingsDialog::onEraseAccountButtonPressed);
 }
 
 UserSettingsDialog::~UserSettingsDialog() {
@@ -162,17 +172,19 @@ void UserSettingsDialog::handleAuthResponse(const QString requestType, QNetworkR
     if(requestType == "login"){
         QJsonObject userObj = obj.value("user").toObject();
         user_id = userObj.value("id").toString();
+        QJsonObject userMetadata = userObj.value("user_metadata").toObject();
+        user_name = userMetadata.value("name").toString();
         qDebug() << "Login successful, user_id:" << user_id;
-        QString refreshToken = obj.value("refresh_token").toString();
         QSettings settings("BudgetMonitor", "BudgetMonitor");
-        settings.setValue("auth/refresh_token", refreshToken);
+        settings.setValue("auth/refresh_token", obj.value("refresh_token").toString());
+        settings.setValue("auth/access_token", obj.value("access_token").toString());
         settings.setValue("auth/user_id", user_id);
+        settings.setValue("auth/user_name", user_name);
+        settings.setValue("auth/email", userObj.value("email").toString());
         accept();
 
     }else if(requestType == "signin"){
-        QJsonObject userObj = obj.value("user").toObject();
-        user_id = userObj.value("id").toString();
-        qDebug() << "Sign up successful, user_id:" << user_id;
+        qDebug() << "Sign up successful, user_id:" << obj.value("user").toObject().value("id").toString();
         QMessageBox::information(this, "Success", "Account created successfully. Please check your email to confirm (Spam).");
         ui->userSettingsWidget->setCurrentWidget(ui->logInWidget);
     }
@@ -217,13 +229,17 @@ void UserSettingsDialog::tryAutoLogin(QNetworkAccessManager *manager,
         QJsonObject userObj = obj.value("user").toObject();
         QJsonObject userMetadata = userObj.value("user_metadata").toObject();
         user_id = userObj.value("id").toString();
-        user_name = user_name = userMetadata.value("name").toString();
-        qDebug()<<"username: "<< user_name;
-        QString newRefreshToken = obj.value("refresh_token").toString();
+        user_name = userMetadata.value("name").toString();
+
+        qDebug() << "username:" << user_name;
         QSettings settings("BudgetMonitor", "BudgetMonitor");
-        settings.setValue("auth/refresh_token", newRefreshToken);
+        settings.setValue("auth/refresh_token", obj.value("refresh_token").toString());
+        settings.setValue("auth/access_token", obj.value("access_token").toString());
         settings.setValue("auth/user_id", user_id);
         settings.setValue("auth/user_name", user_name);
+
+        QString userEmail = userObj.value("email").toString();
+        settings.setValue("auth/email", userEmail);
 
         qDebug() << "Auto-login successful, user_id:" << user_id << user_name;
         callback(true);
@@ -233,8 +249,175 @@ void UserSettingsDialog::tryAutoLogin(QNetworkAccessManager *manager,
 void UserSettingsDialog::logout() {
     QSettings settings("BudgetMonitor", "BudgetMonitor");
     settings.remove("auth/refresh_token");
+    settings.remove("auth/access_token");
     settings.remove("auth/user_id");
     settings.remove("auth/user_name");
+    settings.remove("auth/email");
     user_id = "";
     user_name = "";
+}
+
+
+void UserSettingsDialog::onChangeNameButtonPressed(){
+    QDialog dialog(this);
+    dialog.setWindowTitle("Edit Name");
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    QSettings settings("BudgetMonitor", "BudgetMonitor");
+    QLabel *label = new QLabel("New Name:", &dialog);
+    QLineEdit *input = new QLineEdit(&dialog);
+    input->setText(settings.value("auth/user_name").toString());
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Close, &dialog);
+
+    layout->addWidget(label);
+    layout->addWidget(input);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString newName = input->text().trimmed();
+        if (!newName.isEmpty())
+            updateNameInSupabase(newName);
+    }
+}
+
+void UserSettingsDialog::onChangeEmailButtonPressed(){
+    QDialog dialog(this);
+    dialog.setWindowTitle("Edit Email");
+
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+
+    QSettings settings("BudgetMonitor", "BudgetMonitor");
+    QLabel *label = new QLabel("New Email:", &dialog);
+    QLineEdit *input = new QLineEdit(&dialog);
+    input->setText(settings.value("auth/email").toString());
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Close, &dialog);
+
+    layout->addWidget(label);
+    layout->addWidget(input);
+    layout->addWidget(buttons);
+
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QString newEmail = input->text().trimmed();
+        if (!newEmail.isEmpty())
+            updateEmailInSupabase(newEmail);
+    }
+}
+QNetworkReply* UserSettingsDialog::makeAuthenticatedPut(const QJsonObject &body) {
+    QSettings settings("BudgetMonitor", "BudgetMonitor");
+    QString accessToken = settings.value("auth/access_token").toString();
+    if (accessToken.isEmpty())
+        return nullptr;
+
+    QUrl url(m_supabaseUrl + "/auth/v1/user");
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("apikey", m_supabaseAnonKey.toUtf8());
+    request.setRawHeader("Authorization", ("Bearer " + accessToken).toUtf8());
+
+    return m_networkManager->put(request, QJsonDocument(body).toJson());
+}
+
+void UserSettingsDialog::updateEmailInSupabase(const QString &newEmail) {
+    QJsonObject body;
+    body["email"] = newEmail;
+
+    QNetworkReply *reply = makeAuthenticatedPut(body);
+    if (!reply) { QMessageBox::warning(this, "Error", "Not logged in"); return; }
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply, newEmail]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+            QString errorMsg = obj.value("message").toString();
+            if (errorMsg.isEmpty()) errorMsg = reply->errorString();
+            QMessageBox::warning(this, "Error", errorMsg);
+            return;
+        }
+        QSettings("BudgetMonitor", "BudgetMonitor").setValue("auth/email", newEmail);
+        QMessageBox::information(this, "Success", "Email updated. Check your inbox to confirm the change.");
+    });
+}
+
+void UserSettingsDialog::updateNameInSupabase(const QString &newName) {
+    QJsonObject metadata;
+    metadata["name"] = newName;
+    QJsonObject body;
+    body["data"] = metadata;
+
+    QNetworkReply *reply = makeAuthenticatedPut(body);
+    if (!reply) { QMessageBox::warning(this, "Error", "Not logged in"); return; }
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply, newName]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+            QString errorMsg = obj.value("message").toString();
+            if (errorMsg.isEmpty()) errorMsg = reply->errorString();
+            QMessageBox::warning(this, "Error", errorMsg);
+            return;
+        }
+        user_name = newName;
+        QSettings("BudgetMonitor", "BudgetMonitor").setValue("auth/user_name", newName);
+        emit userNameChanged(newName);
+        QMessageBox::information(this, "Success", "Name updated successfully.");
+    });
+}
+
+void UserSettingsDialog::onEraseAccountButtonPressed() {
+    QMessageBox warning;
+    warning.setWindowTitle("Delete Account");
+    warning.setIcon(QMessageBox::Critical);
+    warning.setText("<b>Are you sure you want to delete your account?</b>");
+    warning.setInformativeText(
+        "This action is permanent and cannot be undone.\n"
+        "All your data, transactions and categories will be lost forever."
+    );
+    warning.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+    warning.setDefaultButton(QMessageBox::Cancel);
+    warning.button(QMessageBox::Yes)->setText("Yes, delete my account");
+
+    if (warning.exec() != QMessageBox::Yes)
+        return;
+
+    QSettings settings("BudgetMonitor", "BudgetMonitor");
+    QString userId = settings.value("auth/user_id").toString();
+    if (userId.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Not logged in");
+        return;
+    }
+
+    QMap<QString, QString> env = DatabaseManager::loadEnvFile();
+    QString serviceRoleKey = env.value("SUPABASE_SERVICE_ROLE_KEY");
+    if (serviceRoleKey.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Server configuration missing (SUPABASE_SERVICE_ROLE_KEY)");
+        return;
+    }
+
+    QUrl url(m_supabaseUrl + "/auth/v1/admin/users/" + userId);
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("apikey", serviceRoleKey.toUtf8());
+    request.setRawHeader("Authorization", ("Bearer " + serviceRoleKey).toUtf8());
+
+    QNetworkReply *reply = m_networkManager->deleteResource(request);
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError) {
+            QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
+            QString errorMsg = obj.value("message").toString();
+            if (errorMsg.isEmpty()) errorMsg = reply->errorString();
+            QMessageBox::warning(this, "Error", errorMsg);
+            return;
+        }
+        logout();
+        QMessageBox::information(this, "Account Deleted", "Your account has been permanently deleted.");
+        emit backToMain();
+    });
 }

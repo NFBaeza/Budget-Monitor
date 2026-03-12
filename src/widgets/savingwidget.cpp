@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 
 extern QString user_id;
+static QLocale locale(QLocale::German);
 
 SavingView::SavingView(QWidget *parent) 
     : QWidget(parent),
@@ -14,10 +15,7 @@ SavingView::SavingView(QWidget *parent)
     ui->setupUi(this);
     this->setFixedSize(1080, 650);
 
-    categoryModel = DatabaseManager::instance().getCategoryModel(this);
     transactionsModel = DatabaseManager::instance().getTransactionsModel(this);
-    incomeModel = DatabaseManager::instance().getIncomeModel(this);
-    expenseModel = DatabaseManager::instance().getExpenseModel(this);
 
     ui->titleLabel->setStyleSheet("font-size: 16pt");
     
@@ -34,74 +32,46 @@ void SavingView::backButtonWasPressed(){
     emit backbutton_was_pressed();
 }
 
-void SavingView::getAmountByMonth(const QString firstDate, const QString lastDate){
-    Ui::MONEY money_distrubition;
-    QSqlDatabase db = DatabaseManager::instance().getDatabase();
-    QSqlQuery query(db);
-    query.prepare("SELECT c.type, SUM(t.amount) "
-                  "FROM money_transactions t "
-                  "JOIN categories c ON t.category_id = c.id "
-                  "WHERE t.date >= :start AND t.date <= :end AND t.user_id = :user "
-                  "GROUP BY c.type");
-
-    query.bindValue(":start", firstDate);
-    query.bindValue(":end", lastDate);
-    query.bindValue(":user", user_id);
-
-    if (query.exec()) {
-        while (query.next()) {
-            QString type = query.value(0).toString().toLower();
-            int total = query.value(1).toInt();
-            if(type == "expense"){
-                money_distrubition.expenses = total;
-            } else{
-                money_distrubition.incomes = total;
-            }
-        }
-    } else {
-        qDebug() << "[setAmountByCategory] ERROR:" << query.lastError().text();
-    }
-
-    money_distrubition.saving = money_distrubition.incomes - money_distrubition.expenses;
-    money_distrubition.date = firstDate;
-    money_by_month.emplace_back(money_distrubition);
-}
-
 void SavingView::updateSummary(){
-    QLocale locale(QLocale::German);
-    if (money_by_month.empty()) return;
-
-    int total_savings = 0;
-    for (const auto& money : money_by_month) {
-        total_savings += money.saving;
+    int totalSavings = 0;
+    
+    for(int i_month = 0; i_month < numberOfMonthInAYear; i_month++){
+        for(const auto [card, amount] : moneyByMonth[i_month].cards.asKeyValueRange()){
+            qDebug() <<"Saving month: "<< i_month<<" "<<card<<amount.incomes-amount.expenses;
+            totalSavings += (amount.incomes-amount.expenses);
+            moneyByMonth[i_month].totals.savings = (amount.incomes-amount.expenses);
+        }
     }
-
-
-    if(total_savings < 0){
+       
+    if(totalSavings < 0){
+        qDebug()<<"total Saving: "<< totalSavings;
         ui->labelTotalAmount->setText("0");
     }else{
-        ui->labelTotalAmount->setText(locale.toString(total_savings));
+        ui->labelTotalAmount->setText(locale().toString(totalSavings));
     }
 
-    ui->labelAverageAmount->setText(locale.toString(total_savings / 12));
+    ui->labelAverageAmount->setText(locale().toString(totalSavings / numberOfMonthInAYear));
 
-    auto compareBySaving = [](const Ui::MONEY& a, const Ui::MONEY& b) {
-        return a.saving < b.saving;
+    auto compareBySaving = [](const Ui::MONEY&  a, const Ui::MONEY& b) {
+        return a.totals.savings < b.totals.savings;
     };
 
-    auto it_max = std::max_element(money_by_month.begin(), money_by_month.end(), compareBySaving);
-    ui->labelHigherAmount->setText(QString::number((it_max->saving < 0) ? 0 : (it_max->saving)));
+    auto it_max = std::max_element(moneyByMonth.begin(), moneyByMonth.end(), compareBySaving);
+    ui->labelHigherAmount->setText(locale().toString((it_max->totals.savings < 0) ? 0.0 : it_max->totals.savings, 'f', 0));
 
-    auto it_min = std::min_element(money_by_month.begin(), money_by_month.end(), compareBySaving);
-    ui->labelLowerAmount->setText(QString::number((it_min->saving < 0) ? 0 : (it_min->saving)));
+    auto it_min = std::min_element(moneyByMonth.begin(), moneyByMonth.end(), compareBySaving);
+    ui->labelLowerAmount->setText(locale().toString((it_min->totals.savings < 0) ? 0.0 : it_min->totals.savings, 'f', 0));
+
 
     int total_incomes = 0;
-    for(const auto &money: money_by_month){
-        total_incomes+=money.incomes;
+    for(int i_month = 0; i_month < numberOfMonthInAYear; i_month++){
+        for(const auto [card, amount] : moneyByMonth[i_month].cards.asKeyValueRange()){
+            total_incomes += amount.incomes;
+        }
     }
 
-    double ratio = ((double)(total_savings) / std::abs(total_incomes)) * 100.0;
-    ui->labelRatioAmount->setText(locale.toString(ratio, 'f', 1) + "%");
+    double ratio = ((double)(totalSavings) / std::abs(total_incomes)) * 100.0;
+    ui->labelRatioAmount->setText(locale().toString(ratio, 'f', 1) + "%");
 
     if(ratio < 0){
         ui->labelRatioAmount->setStyleSheet("color: red;");
@@ -115,18 +85,15 @@ void SavingView::updateSummary(){
 
 void SavingView::updateBarGraph(){
     QBarSet *savingsSet = new QBarSet("Savings");
-    //QBarSet *expensesSet = new QBarSet("Expenses");
     QStringList monthsList;
 
-    for (auto it = money_by_month.rbegin(); it != money_by_month.rend(); ++it) {
-        *savingsSet << it->saving;
-        //*expensesSet << it->expenses;
+    for (auto it = moneyByMonth.rbegin(); it != moneyByMonth.rend(); ++it) {
+        *savingsSet << it->totals.savings;
         monthsList << QDate::fromString(it->date, "yyyy-MM-dd").toString("MM-yy");
     }
 
     QBarSeries *series = new QBarSeries();
     series->append(savingsSet);
-    //series->append(expensesSet);
 
     QChart *chart = new QChart();
     savingsSet->setBrush(QBrush(QColor("#a0eb74cc")));
@@ -163,20 +130,23 @@ void SavingView::initView() {
     QString fechaFormateada = QString("Current Date/Time:\n%1").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy  HH:mm"));
     ui->labelCurrentTime->setText(fechaFormateada);
 
-    QDate initDate = QDate::currentDate();
-    for(int i_month = 0; i_month < 12; i_month++){
+    moneyByMonth.resize(numberOfMonthInAYear);
 
-        QString firstDate = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");
-        QString lastDate = QDate(initDate.year(), initDate.month(), initDate.daysInMonth()).toString("yyyy-MM-dd");
-        
+    QDate initDate = QDate::currentDate();
+
+    for(int i_month = 0; i_month < 12; i_month++){
+        MonthlyReportService service(initDate, user_id);
+
+        QString date = QDate(initDate.year(), initDate.month(), 1).toString("yyyy-MM-dd");       
         transactionsModel->select();
 
-        getAmountByMonth(firstDate, lastDate);
+        moneyByMonth[i_month].cards = service.getAmountByTypeCard("debit");
+        moneyByMonth[i_month].totals = service.getComputeTotals(service.getAmountByCategory());
+        moneyByMonth[i_month].date = date;
 
         initDate = initDate.addMonths(-1);
     }
 
-    updateBarGraph();
     updateSummary();
+    updateBarGraph();
 }
-
