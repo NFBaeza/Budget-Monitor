@@ -48,6 +48,7 @@ set(SOURCES
     src/widgets/creditcardwidget.cpp
     src/dialogs/formdialog.cpp
     src/dialogs/categorydialog.cpp
+    src/dialogs/accountdialog.cpp
     src/dialogs/addingfiledialog.cpp
     src/dialogs/monthselectordialog.cpp
     src/dialogs/usersettingsdialog.cpp
@@ -67,6 +68,7 @@ set(HEADERS
     include/widgets/creditcardwidget.h
     include/dialogs/formdialog.h
     include/dialogs/categorydialog.h
+    include/dialogs/accountdialog.h
     include/dialogs/addingfiledialog.h
     include/dialogs/monthselectordialog.h
     include/dialogs/usersettingsdialog.h
@@ -88,6 +90,7 @@ set(UI_FILES
     ui/monthreportwidget.ui
     ui/usersettingsdialog.ui
     ui/creditcardwidget.ui
+    ui/accountdialog.ui
 )
 
 add_subdirectory(libs/XLSXReader)
