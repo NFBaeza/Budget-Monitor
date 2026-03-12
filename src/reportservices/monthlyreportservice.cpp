@@ -24,11 +24,12 @@ MonthlyReportService::~MonthlyReportService()
     delete accountModel;
 }
 
-QPair<QDate, QDate> MonthlyReportService::dateRange() const
+QPair<QDate, QDate> MonthlyReportService::dateRange(const QDate &month) const
 {
+    const QDate &ref = month.isValid() ? month : m_month;
     return {
-        QDate(m_month.year(), m_month.month(), 1),
-        QDate(m_month.year(), m_month.month(), m_month.daysInMonth())
+        QDate(ref.year(), ref.month(), 1),
+        QDate(ref.year(), ref.month(), ref.daysInMonth())
     };
 }
 
@@ -37,7 +38,7 @@ QString MonthlyReportService::getCategoryType(const QString &categoryName) const
     return m_incomeCategories.contains(categoryName.toLower()) ? "income" : "expense";
 }
 
-QMap<QString, int> MonthlyReportService::getAmountByCategory() const
+QMap<QString, int> MonthlyReportService::getAmountByCategory(const QDate &month) const
 {
     QMap<QString, int> result;
     QSqlQuery query(DatabaseManager::instance().getDatabase());
@@ -47,11 +48,11 @@ QMap<QString, int> MonthlyReportService::getAmountByCategory() const
                        "JOIN categories c ON t.category_id = c.id "
                        "WHERE t.date >= :start AND t.date <= :end AND t.user_id = :user "
                        "GROUP BY c.name")) {
-        qDebug() << "[MonthlyReportService::amountByCategory] PREPARE ERROR:" << query.lastError().text();
+        qDebug() << "[MonthlyReportService::getAmountByCategory] PREPARE ERROR:" << query.lastError().text();
         return result;
     }
 
-    auto [first, last] = dateRange();
+    auto [first, last] = dateRange(month);
     query.bindValue(":start", first.toString("yyyy-MM-dd"));
     query.bindValue(":end",   last.toString("yyyy-MM-dd"));
     query.bindValue(":user",  m_userId);
@@ -61,13 +62,47 @@ QMap<QString, int> MonthlyReportService::getAmountByCategory() const
             result[query.value(0).toString().toLower()] = query.value(1).toInt();
         }
     } else {
-        qDebug() << "[MonthlyReportService::amountByCategory] ERROR:" << query.lastError().text();
+        qDebug() << "[MonthlyReportService::getAmountByCategory] ERROR:" << query.lastError().text();
     }
 
     return result;
 }
 
-QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getAmountByTypeCard(const QString &type_of_card, const QDate &month) const
+QMap<QString, int> MonthlyReportService::getAmountByCategoryAndTypeOfCard(const QString &typeOfCard, const QDate &month) const
+{
+    QMap<QString, int> result;
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+
+    if (!query.prepare("SELECT c.name, SUM(t.amount) "
+                       "FROM money_transactions t "
+                       "JOIN categories c ON t.category_id = c.id "
+                       "JOIN accounts a ON t.account_id = a.id "
+                       "WHERE t.date >= :start AND t.date <= :end "
+                       "AND t.user_id = :user "
+                       "AND a.type = :type "
+                       "GROUP BY c.name")) {
+        qDebug() << "[MonthlyReportService::getAmountByCategoryAndTypeOfCard] PREPARE ERROR:" << query.lastError().text();
+        return result;
+    }
+
+    auto [first, last] = dateRange(month);
+    query.bindValue(":start", first.toString("yyyy-MM-dd"));
+    query.bindValue(":end",   last.toString("yyyy-MM-dd"));
+    query.bindValue(":type",  typeOfCard);
+    query.bindValue(":user",  m_userId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            result[query.value(0).toString().toLower()] = query.value(1).toInt();
+        }
+    } else {
+        qDebug() << "[MonthlyReportService::getAmountByCategoryAndTypeOfCard] ERROR:" << query.lastError().text();
+    }
+
+    return result;
+}
+
+QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getTotalsByTypeCard(const QString &typeOfCard, const QDate &month) const
 {
     QMap<QString, MonthlyReportService::Totals> response;
     QSqlQuery query(DatabaseManager::instance().getDatabase());
@@ -80,29 +115,27 @@ QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getAmountByTyp
                        "AND t.user_id = :user "
                        "AND a.type = :type "
                        "GROUP BY a.name, c.type")) {
-        qDebug() << "[calculateMonthlyExpenses] PREPARE ERROR:" << query.lastError().text();
+        qDebug() << "[MonthlyReportService::getTotalsByTypeCard] PREPARE ERROR:" << query.lastError().text();
         return response;
     }
 
-    const QDate &ref = month.isValid() ? month : m_month;
-    auto first = QDate(ref.year(), ref.month(), 1);
-    auto last  = QDate(ref.year(), ref.month(), ref.daysInMonth());
+    auto [first, last] = dateRange(month);
     query.bindValue(":start", first.toString("yyyy-MM-dd"));
     query.bindValue(":end",   last.toString("yyyy-MM-dd"));
     query.bindValue(":user",  m_userId);
-    query.bindValue(":type",  type_of_card);
+    query.bindValue(":type",  typeOfCard);
 
     if (query.exec()) {
         while (query.next()) {
-            QString name = query.value(0).toString();           
-            if(query.value(1).toString() == "expense"){
+            QString name = query.value(0).toString();
+            if (query.value(1).toString() == "expense") {
                 response[name].expenses = query.value(2).toInt();
             } else {
                 response[name].incomes = query.value(2).toInt();
             }
         }
     } else {
-        qDebug() << "[MonthlyReportService::amountByCategory] ERROR:" << query.lastError().text();
+        qDebug() << "[MonthlyReportService::getTotalsByTypeCard] ERROR:" << query.lastError().text();
     }
     return response;
 }
@@ -121,54 +154,122 @@ MonthlyReportService::Totals MonthlyReportService::getComputeTotals(const QMap<Q
     return totals;
 }
 
+MonthlyReportService::Totals MonthlyReportService::getTotalsByNameOfCard(const QString &nameOfCard, const QDate &month) const
+{
+    QMap<QString, int> amountByCategory;
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+
+    if (!query.prepare("SELECT c.name, SUM(t.amount) "
+                       "FROM money_transactions t "
+                       "JOIN categories c ON t.category_id = c.id "
+                       "JOIN accounts a ON t.account_id = a.id "
+                       "WHERE t.date >= :start AND t.date <= :end "
+                       "AND t.user_id = :user "
+                       "AND a.name = :name "
+                       "GROUP BY c.name")) {
+        qDebug() << "[MonthlyReportService::getTotalsByNameOfCard] PREPARE ERROR:" << query.lastError().text();
+        return {};
+    }
+
+    auto [first, last] = dateRange(month);
+    query.bindValue(":start", first.toString("yyyy-MM-dd"));
+    query.bindValue(":end",   last.toString("yyyy-MM-dd"));
+    query.bindValue(":name",  nameOfCard);
+    query.bindValue(":user",  m_userId);
+
+    if (query.exec()) {
+        while (query.next()) {
+            amountByCategory[query.value(0).toString().toLower()] = query.value(1).toInt();
+        }
+    } else {
+        qDebug() << "[MonthlyReportService::getTotalsByNameOfCard] ERROR:" << query.lastError().text();
+    }
+
+    Totals totals = getComputeTotals(amountByCategory);
+    totals.bankName = nameOfCard;
+    return totals;
+}
 
 int MonthlyReportService::getCreditCardNumber() const
 {
-    QString creditAccountFilter = QString("accounts.type = '%1' AND accounts.user_id = '%2'").arg("credit").arg(m_userId);
-    
-    accountModel->setFilter(creditAccountFilter);
-    accountModel->select();
-
-    int numberOfCreditCards = accountModel->rowCount();
-
-    return numberOfCreditCards;
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+    if (query.prepare("SELECT COUNT(*) FROM accounts WHERE type = 'credit' AND user_id = :user")) {
+        query.bindValue(":user", m_userId);
+        if (query.exec() && query.next()) {
+            return query.value(0).toInt();
+        }
+    }
+    qDebug() << "[MonthlyReportService::getCreditCardNumber] ERROR:" << query.lastError().text();
+    return 0;
 }
 
-QList<MonthlyReportService::CreditSummary> MonthlyReportService::getCreditSummaries(int maxCards) const
+MonthlyReportService::CreditSummary MonthlyReportService::getCreditSummaryByName(const QString &nameOfCard, const QDate &month) const
 {
-    QList<CreditSummary> result;
+    CreditSummary summaryByName;
     QSqlQuery query(DatabaseManager::instance().getDatabase());
 
-    // NOTE: replace 'account_limit' with the actual credit limit column name in your schema
     if (!query.prepare("SELECT a.name, a.limit, COALESCE(SUM(t.amount), 0) "
                        "FROM accounts a "
                        "LEFT JOIN money_transactions t ON t.account_id = a.id "
                        "  AND t.date >= :start AND t.date <= :end AND t.user_id = :user "
-                       "WHERE a.type = 'credit' AND a.user_id = :user2 "
-                       "GROUP BY a.name, a.limit "
-                       "LIMIT :max")) {
-        qDebug() << "[MonthlyReportService::creditSummaries] PREPARE ERROR:" << query.lastError().text();
-        return result;
+                       "WHERE a.type = 'credit' AND a.user_id = :user "
+                       "AND a.name = :name "
+                       "GROUP BY a.name, a.limit")) {
+        qDebug() << "[MonthlyReportService::getCreditSummaryByName] PREPARE ERROR:" << query.lastError().text();
+        return summaryByName;
     }
 
-    auto [first, last] = dateRange();
+    auto [first, last] = dateRange(month);
     query.bindValue(":start", first.toString("yyyy-MM-dd"));
     query.bindValue(":end",   last.toString("yyyy-MM-dd"));
     query.bindValue(":user",  m_userId);
-    query.bindValue(":user2", m_userId);
+    query.bindValue(":name",  nameOfCard);
+
+    if (query.exec() && query.next()) {
+        summaryByName.bankName  = query.value(0).toString();
+        summaryByName.limit     = query.value(1).toInt();
+        summaryByName.used      = query.value(2).toInt();
+        summaryByName.available = summaryByName.limit - summaryByName.used;
+    } else if (!query.isActive()) {
+        qDebug() << "[MonthlyReportService::getCreditSummaryByName] ERROR:" << query.lastError().text();
+    }
+
+    return summaryByName;
+}
+
+QList<MonthlyReportService::CreditSummary> MonthlyReportService::getAllCreditSummaries(int maxCards, const QDate &month) const
+{
+    QList<CreditSummary> result;
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+
+    if (!query.prepare("SELECT a.name, a.limit, COALESCE(SUM(t.amount), 0) "
+                       "FROM accounts a "
+                       "LEFT JOIN money_transactions t ON t.account_id = a.id "
+                       "  AND t.date >= :start AND t.date <= :end AND t.user_id = :user "
+                       "WHERE a.type = 'credit' AND a.user_id = :user "
+                       "GROUP BY a.name, a.limit "
+                       "LIMIT :max")) {
+        qDebug() << "[MonthlyReportService::getAllCreditSummaries] PREPARE ERROR:" << query.lastError().text();
+        return result;
+    }
+
+    auto [first, last] = dateRange(month);
+    query.bindValue(":start", first.toString("yyyy-MM-dd"));
+    query.bindValue(":end",   last.toString("yyyy-MM-dd"));
+    query.bindValue(":user",  m_userId);
     query.bindValue(":max",   maxCards);
 
     if (query.exec()) {
         while (query.next()) {
             CreditSummary cs;
-            cs.bankName        = query.value(0).toString();
-            cs.limitCredit     = query.value(1).toInt();
-            cs.usedCredit      = query.value(2).toInt();
-            cs.availableCredit = cs.limitCredit - cs.usedCredit;
+            cs.bankName  = query.value(0).toString();
+            cs.limit     = query.value(1).toInt();
+            cs.used      = query.value(2).toInt();
+            cs.available = cs.limit - cs.used;
             result.append(cs);
         }
     } else {
-        qDebug() << "[MonthlyReportService::creditSummaries] ERROR:" << query.lastError().text();
+        qDebug() << "[MonthlyReportService::getAllCreditSummaries] ERROR:" << query.lastError().text();
     }
 
     return result;

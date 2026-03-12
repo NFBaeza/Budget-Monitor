@@ -107,13 +107,13 @@ void  MonthView::updateTransactions(){
 }
 
 void MonthView::updateCreditReview(){
-    QList creditCardSumary = ReportService.getCreditSummaries(numberOfCreditCards);
+    auto creditCardSumary = ReportService.getAllCreditSummaries(numberOfCreditCards);
     for(int i = 0; i < creditCardSumary.size(); i++){
         m_labels[i*numberOfLabelPerCreditCard]->setTextFormat(Qt::MarkdownText);
         m_labels[i*numberOfLabelPerCreditCard]->setText(QString("**%1**").arg(creditCardSumary[i].bankName));
-        m_labels[i*numberOfLabelPerCreditCard+2]->setText(QString::number(creditCardSumary[i].usedCredit));
-        m_labels[i*numberOfLabelPerCreditCard+4]->setText(QString::number(creditCardSumary[i].availableCredit));
-        m_labels[i*numberOfLabelPerCreditCard+6]->setText(QString::number(creditCardSumary[i].limitCredit));
+        m_labels[i*numberOfLabelPerCreditCard+2]->setText(QString::number(creditCardSumary[i].used));
+        m_labels[i*numberOfLabelPerCreditCard+4]->setText(QString::number(creditCardSumary[i].available));
+        m_labels[i*numberOfLabelPerCreditCard+6]->setText(QString::number(creditCardSumary[i].limit));
 
         for(int posY = 2; posY < numberOfLabelPerCreditCard; posY+=2){
             m_labels[i*numberOfLabelPerCreditCard+posY]->setAlignment(Qt::AlignRight);

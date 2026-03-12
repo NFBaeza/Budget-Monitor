@@ -16,6 +16,7 @@ class MonthlyReportService
 {
 public:
     struct Totals {
+        QString bankName;
         int incomes  = 0;
         int expenses = 0;
         int savings  = 0;
@@ -23,20 +24,25 @@ public:
 
     struct CreditSummary {
         QString bankName;
-        int limitCredit     = 0;
-        int usedCredit      = 0;
-        int availableCredit = 0;
+        int limit     = 0;
+        int used      = 0;
+        int available = 0;
     };
 
     MonthlyReportService(const QDate &month, const QString &userId);
     ~MonthlyReportService();
 
-    QMap<QString, int>   getAmountByCategory() const;
-    QMap<QString, Totals>getAmountByTypeCard(const QString &type_of_card, const QDate &month = QDate()) const;
-    Totals               getComputeTotals(const QMap<QString, int> &amountByCategory) const;
-    QList<CreditSummary> getCreditSummaries(int maxCards = 3) const;
-    QString              getCategoryType(const QString &categoryName) const; 
-    int                  getCreditCardNumber() const;
+    QMap<QString, int>      getAmountByCategory(const QDate &month = QDate()) const;
+    QMap<QString, int>      getAmountByCategoryAndTypeOfCard(const QString &typeOfCard, const QDate &month = QDate()) const;
+    QMap<QString, Totals>   getTotalsByTypeCard(const QString &typeOfCard, const QDate &month = QDate()) const;
+    Totals                  getTotalsByNameOfCard(const QString &nameOfCard, const QDate &month = QDate()) const;
+    Totals                  getComputeTotals(const QMap<QString, int> &amountByCategory) const;
+    
+    int                     getCreditCardNumber() const;
+    QList<CreditSummary>    getAllCreditSummaries(int maxCards = 3, const QDate &month = QDate()) const;
+    CreditSummary           getCreditSummaryByName(const QString &nameOfCard, const QDate &month = QDate()) const;
+    QString                 getCategoryType(const QString &categoryName) const; 
+    
 
 private:
     QDate         m_month;
@@ -44,7 +50,7 @@ private:
     QSet<QString> m_incomeCategories;
     QSqlTableModel *accountModel{nullptr};
 
-    QPair<QDate, QDate> dateRange() const;
+    QPair<QDate, QDate> dateRange(const QDate &month = QDate()) const;
 };
 
 #endif // MONTHLYREPORTSERVICE_H
