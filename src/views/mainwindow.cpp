@@ -92,6 +92,7 @@ void MainWindow::onCreditCardButtonPressed() {
     if(!user_id.isEmpty()){
         CreditCardView *dashboard = new CreditCardView(QDate::currentDate(), this);
         connect(dashboard, &CreditCardView::backToMain, this, &MainWindow::showMainView);
+        connect(dashboard, &CreditCardView::goToCurrentMonth, this, &MainWindow::onCurrentMonthPressed);
         setCentralWidget(dashboard);
         setMinimumSize(dashboard->minimumSize());
         resize(dashboard->minimumSize());
