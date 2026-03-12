@@ -46,21 +46,14 @@ private slots:
     void onDeleteExpenseClicked();
     void onExpenseDoubleClicked(const QModelIndex &index);
 
-    // Account actions
-    void onAddAccountClicked();
-    void onDeleteAccountClicked();
-    void onAccountDoubleClicked(const QModelIndex &index);
-
 private:
     Ui::CategoryDialog *ui;
 
     QSqlTableModel *incomeModel{nullptr};
     QSqlTableModel *expenseModel{nullptr};
-    QSqlTableModel *accountModel{nullptr};
 
     void initView();
     void loadCategories();
-    void loadAccounts();
     void setButtonsEnabled(bool enabled);
 };
 
