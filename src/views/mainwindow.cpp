@@ -53,8 +53,9 @@ void MainWindow::onPastMonthsButtonPressed() {
         connect(dialog, &MonthSelectorDialog::monthClicked, this, [this](QDate date) {
             MonthView *monthView = new MonthView(date, this);
             connect(monthView, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-            setMinimumSize(1080, 650);
             setCentralWidget(monthView);
+            setMinimumSize(monthView->minimumSize());
+            resize(monthView->minimumSize());
         });
         connect(dialog, &MonthSelectorDialog::closeWasPressed, this, &MainWindow::showMainView);
         setCentralWidget(dialog);
@@ -72,11 +73,13 @@ void MainWindow::onSavingPressed() {
             MonthReport *monthReport = new MonthReport(date, this);
             connect(monthReport, &MonthReport::backToSavingButtonWasPressed, this, &MainWindow::onSavingPressed);
             connect(monthReport, &MonthReport::backToMenuButtonWasPressed, this, &MainWindow::showMainView);
-            resize(660, 750);
             setCentralWidget(monthReport);
+            setMinimumSize(monthReport->minimumSize());
+            resize(monthReport->minimumSize());
         });
-        resize(1080, 650);
         setCentralWidget(dashboard);
+        setMinimumSize(dashboard->minimumSize());
+        resize(dashboard->minimumSize());
     }else{
         QMessageBox::warning(this, "Error", "Please login first");
         onUserSettingsPressed();
@@ -87,8 +90,9 @@ void MainWindow::onCurrentMonthPressed() {
     if(!user_id.isEmpty()){
         MonthView *dashboard = new MonthView(QDate::currentDate(), this);
         connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
-        resize(1150, 700);
         setCentralWidget(dashboard);
+        setMinimumSize(dashboard->minimumSize());
+        resize(dashboard->minimumSize());
     }else{
         QMessageBox::warning(this, "Error", "Please login first");
         onUserSettingsPressed();
@@ -103,9 +107,8 @@ void MainWindow::showMainView() {
 
     // Restore the UI from the .ui file
     ui->setupUi(this);
-
-    // Restore the original window size
-    resize(500, 230);
+    setMinimumSize(470, 300);
+    adjustSize();
 
     // Reconnect the button signals
     connect(ui->CurrentMonthButton, &QPushButton::clicked, this, &MainWindow::onCurrentMonthPressed);

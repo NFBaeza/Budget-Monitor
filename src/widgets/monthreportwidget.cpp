@@ -10,6 +10,7 @@ MonthReport::MonthReport(QDate dateSelected, QWidget *parent)
       date(dateSelected)  {
 
     ui->setupUi(this);
+    setMinimumSize(600, 650);
 
     connect(ui->backToSavingButton, &QPushButton::clicked, this, [this](){
         emit backToSavingButtonWasPressed();
