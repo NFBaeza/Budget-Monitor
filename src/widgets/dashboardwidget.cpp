@@ -199,7 +199,14 @@ void MonthView::updateLabelsFromFilter(const QString type) {
 
 
 void MonthView::updateSummary(){
-    totals = ReportService.getComputeTotals(amountByCategoryMap);
+    QMap<QString, int> subCategoryAmount;
+    for(const auto& [category, amount] : amountByCategoryMap.asKeyValueRange()){
+        if((category.toLower() == "tranfer") && (category.toLower() == "investment")){
+            continue;
+        }
+        subCategoryAmount[category] = amount;
+    }
+    totals = ReportService.getComputeTotals(subCategoryAmount);
     ui->TotalSavingsAmount->setText(s_locale.toString(totals.savings));
     ui->TotalIncomesAmount->setText(s_locale.toString(totals.incomes));
     ui->TotalExpensesAmount->setText(s_locale.toString(totals.expenses));
