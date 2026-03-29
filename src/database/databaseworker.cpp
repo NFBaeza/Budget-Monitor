@@ -132,14 +132,15 @@ void DatabaseWorker::insertTransaction(const QString &userId, const QString &dat
                                        const QString &description)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
-                  "VALUES (:user_id, :date, :amount, :category, :account, :description)");
+    query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
+                  "VALUES (:user_id, :date, :amount, :category, :account, :description, :original_description)");
     query.bindValue(":user_id", userId);
     query.bindValue(":date", date);
     query.bindValue(":amount", amount);
     query.bindValue(":category", categoryId);
     query.bindValue(":account", accountId);
     query.bindValue(":description", description);
+    query.bindValue(":original_description", description);
 
     if (!query.exec()) {
         emit operationError("insertTransaction", query.lastError().text());
@@ -268,16 +269,19 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
 
         // Insert transaction
         QSqlQuery insertQuery(m_db);
-        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
-                            "VALUES (:user, :date, :amount, :category, :account, :description)");
+        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
+                            "VALUES (:user, :date, :amount, :category, :account, :description, :original_description)");
         insertQuery.bindValue(":user", userId);
         insertQuery.bindValue(":date", date);
         insertQuery.bindValue(":amount", amount);
         insertQuery.bindValue(":category", categoryId);
         insertQuery.bindValue(":account", accountId);
         insertQuery.bindValue(":description", description);
+        insertQuery.bindValue(":original_description", description);
 
         if (!insertQuery.exec()) {
+            if (insertQuery.lastError().nativeErrorCode() == "23505")
+                continue; // duplicate — skip
             emit operationError("bulkImport", insertQuery.lastError().text());
             return;
         }
