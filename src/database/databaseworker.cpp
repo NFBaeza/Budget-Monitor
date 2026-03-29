@@ -132,7 +132,7 @@ void DatabaseWorker::insertTransaction(const QString &userId, const QString &dat
                                        const QString &description)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
+    query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
                   "VALUES (:user_id, :date, :amount, :category, :account, :description, :original_description)");
     query.bindValue(":user_id", userId);
     query.bindValue(":date", date);
@@ -269,7 +269,7 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
 
         // Insert transaction
         QSqlQuery insertQuery(m_db);
-        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
+        insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
                             "VALUES (:user, :date, :amount, :category, :account, :description, :original_description)");
         insertQuery.bindValue(":user", userId);
         insertQuery.bindValue(":date", date);
@@ -280,6 +280,8 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
         insertQuery.bindValue(":original_description", description);
 
         if (!insertQuery.exec()) {
+            if (insertQuery.lastError().nativeErrorCode() == "23505")
+                continue; // duplicate — skip
             emit operationError("bulkImport", insertQuery.lastError().text());
             return;
         }
