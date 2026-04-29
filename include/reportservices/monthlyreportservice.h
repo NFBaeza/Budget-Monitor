@@ -48,6 +48,7 @@ private:
     QDate         m_month;
     QString       m_userId;
     QSet<QString> m_incomeCategories;
+    QSet<QString> m_expenseCategories;
     QSqlTableModel *accountModel{nullptr};
 
     QPair<QDate, QDate> dateRange(const QDate &month = QDate()) const;
