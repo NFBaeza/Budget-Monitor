@@ -4,23 +4,17 @@
 #include "database/databasemanager.h"
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QTextEdit>
 #include <QMessageBox>
-#include <QSqlDatabase>
 #include <QSqlTableModel>
-#include <QSqlRelationalTableModel>
 #include <QSqlError>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QSqlRelation>
-#include <QRadioButton>
-#include <QDebug>
-#include <QPushButton>
-#include <QInputDialog>
-#include <QListView>
 #include <QToolButton>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QList>
+#include <functional>
 
 namespace Ui { class CategoryDialog; }
+class DatabaseWorker;
 
 class CategoryDialog : public QDialog {
     Q_OBJECT
@@ -35,26 +29,32 @@ signals:
 private slots:
     void onSaveClicked();
     void onCancelClicked();
-
-    // Income category actions
-    void onAddIncomeClicked();
-    void onDeleteIncomeClicked();
-    void onIncomeDoubleClicked(const QModelIndex &index);
-
-    // Expense category actions
-    void onAddExpenseClicked();
-    void onDeleteExpenseClicked();
-    void onExpenseDoubleClicked(const QModelIndex &index);
+    
+    void onAddClicked();
+    void onDeleteClicked();
+    void onDoubleClicked(const QModelIndex &index);
 
 private:
     Ui::CategoryDialog *ui;
 
-    QSqlTableModel *incomeModel{nullptr};
-    QSqlTableModel *expenseModel{nullptr};
+    QSqlTableModel *categoryModel{nullptr};
+
+    struct CategoryRow {
+        int id;
+        QString originalName;
+        QString originalType;
+        QLineEdit *nameEdit;
+        QComboBox *typeCombo;
+    };
+    QList<CategoryRow> categoryRows;
 
     void initView();
     void loadCategories();
+    void rebuildCategoryRows();
     void setButtonsEnabled(bool enabled);
+    void runWorkerOp(const QString &opName,
+                     const QString &errorLabel,
+                     std::function<void(DatabaseWorker*)> invoke);
 };
 
 #endif

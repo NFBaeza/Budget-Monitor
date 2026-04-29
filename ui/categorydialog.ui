@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>572</width>
+    <width>378</width>
     <height>323</height>
    </rect>
   </property>
@@ -22,165 +22,27 @@
   <property name="layoutDirection">
    <enum>Qt::LayoutDirection::LeftToRight</enum>
   </property>
-  <layout class="QGridLayout" name="gridLayout" rowstretch="2,0,3,0,0" columnstretch="1,1">
+  <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
-    <number>20</number>
+    <number>12</number>
+   </property>
+   <property name="topMargin">
+    <number>10</number>
    </property>
    <property name="rightMargin">
-    <number>20</number>
+    <number>12</number>
    </property>
-   <property name="horizontalSpacing">
-    <number>20</number>
+   <property name="bottomMargin">
+    <number>12</number>
    </property>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Income</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLabel" name="label_2">
-     <property name="font">
-      <font>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Expense</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QListView" name="listIncomeView">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="editTriggers">
-      <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed|QAbstractItemView::EditTrigger::SelectedClicked</set>
-     </property>
-     <property name="tabKeyNavigation">
-      <bool>true</bool>
-     </property>
-     <property name="dragEnabled">
-      <bool>true</bool>
-     </property>
-     <property name="defaultDropAction">
-      <enum>Qt::DropAction::CopyAction</enum>
-     </property>
-     <property name="alternatingRowColors">
-      <bool>false</bool>
-     </property>
-     <property name="viewMode">
-      <enum>QListView::ViewMode::ListMode</enum>
-     </property>
-     <property name="itemAlignment">
-      <set>Qt::AlignmentFlag::AlignLeading</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QListView" name="listExpenseView">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="editTriggers">
-      <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed|QAbstractItemView::EditTrigger::SelectedClicked</set>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <property name="sizeConstraint">
-      <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
-     </property>
-     <item>
-      <widget class="QToolButton" name="IncomeAddButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-       <property name="icon">
-        <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="IncomeRemoveButton">
-       <property name="layoutDirection">
-        <enum>Qt::LayoutDirection::LeftToRight</enum>
-       </property>
-       <property name="text">
-        <string>...</string>
-       </property>
-       <property name="icon">
-        <iconset theme="QIcon::ThemeIcon::ListRemove"/>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="3" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QToolButton" name="ExpenseAddButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-       <property name="icon">
-        <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="ExpenseRemoveButton">
-       <property name="text">
-        <string>...</string>
-       </property>
-       <property name="icon">
-        <iconset theme="QIcon::ThemeIcon::ListRemove"/>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="4" column="1">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Save</set>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="2">
+   <property name="verticalSpacing">
+    <number>14</number>
+   </property>
+   <item row="0" column="0" colspan="3">
     <widget class="QLabel" name="label_4">
      <property name="font">
       <font>
-       <pointsize>12</pointsize>
+       <pointsize>14</pointsize>
        <bold>true</bold>
       </font>
      </property>
@@ -192,16 +54,78 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="0">
+    <widget class="QToolButton" name="AddButton">
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QToolButton" name="RemoveButton">
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset theme="QIcon::ThemeIcon::ListRemove"/>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="lineWidth">
+      <number>0</number>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>352</width>
+        <height>220</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="categoriesLayout">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <property name="leftMargin">
+        <number>4</number>
+       </property>
+       <property name="topMargin">
+        <number>4</number>
+       </property>
+       <property name="rightMargin">
+        <number>4</number>
+       </property>
+       <property name="bottomMargin">
+        <number>4</number>
+       </property>
+      </layout>
+     </widget>
+    </widget>
+   </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>listIncomeView</tabstop>
-  <tabstop>IncomeAddButton</tabstop>
-  <tabstop>IncomeRemoveButton</tabstop>
-  <tabstop>listExpenseView</tabstop>
-  <tabstop>ExpenseAddButton</tabstop>
-  <tabstop>ExpenseRemoveButton</tabstop>
- </tabstops>
  <resources/>
  <connections>
   <connection>
