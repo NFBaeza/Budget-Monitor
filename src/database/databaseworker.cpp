@@ -277,7 +277,6 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
         insertQuery.bindValue(":category", categoryId);
         insertQuery.bindValue(":account", accountId);
         insertQuery.bindValue(":description", description);
-        insertQuery.bindValue(":original_description", description);
 
         if (!insertQuery.exec()) {
             if (insertQuery.lastError().nativeErrorCode() == "23505")
