@@ -17,7 +17,6 @@ MonthView::MonthView(QDate dateSelected, QWidget *parent) :
 {
     ui->setupUi(this);
     this->setMinimumSize(1080, 650);
-    ui->typeAccountView->setCurrentIndex(0);
 
     monthName = QLocale().monthName(dateViewSelected.month());
     monthName[0] = monthName[0].toUpper();
@@ -25,7 +24,12 @@ MonthView::MonthView(QDate dateSelected, QWidget *parent) :
 
     transactionModel = DatabaseManager::instance().getTransactionsModel(this);
     
-    connect(ui->BackButton, &QPushButton::clicked, this, &MonthView::backButtonWasPressed);
+    connect(ui->checkCreditCardButton, &QPushButton::clicked, this, [this](){
+        emit creditcardButtonWasPressed();
+    });
+    connect(ui->BackButton, &QPushButton::clicked, this, [this](){
+        emit backButtonWasPressed();
+    });
     connect(ui->AddEntryButton, &QPushButton::clicked, this, &MonthView::onAddButtonClicked);
     connect(ui->TableViewLastEntry, &QTableView::doubleClicked, this, &MonthView::onTableRowDoubleClicked);
     connect(ui->EditCategoryButton, &QPushButton::clicked, this, &MonthView::onEditButtonClicked);
@@ -40,11 +44,6 @@ MonthView::MonthView(QDate dateSelected, QWidget *parent) :
 
 MonthView::~MonthView() {
     delete ui;
-}
-
-void MonthView::backButtonWasPressed(){
-    emit backbutton_was_pressed();
-
 }
 
 void MonthView::onAddButtonClicked() {
@@ -111,20 +110,6 @@ void  MonthView::updateTransactions(){
     ui->TableViewLastEntry->setColumnHidden(9,true);
 }
 
-void MonthView::updateCreditReview(){
-    auto creditCardSumary = ReportService.getAllCreditSummaries(numberOfCreditCards);
-    for(int i = 0; i < creditCardSumary.size(); i++){
-        m_labels[i*numberOfLabelPerCreditCard]->setTextFormat(Qt::MarkdownText);
-        m_labels[i*numberOfLabelPerCreditCard]->setText(QString("**%1**").arg(creditCardSumary[i].bankName));
-        m_labels[i*numberOfLabelPerCreditCard+2]->setText(QString::number(creditCardSumary[i].used));
-        m_labels[i*numberOfLabelPerCreditCard+4]->setText(QString::number(creditCardSumary[i].available));
-        m_labels[i*numberOfLabelPerCreditCard+6]->setText(QString::number(creditCardSumary[i].limit));
-
-        for(int posY = 2; posY < numberOfLabelPerCreditCard; posY+=2){
-            m_labels[i*numberOfLabelPerCreditCard+posY]->setAlignment(Qt::AlignRight);
-        }
-    }
-}
 
 void MonthView::updateView(){
     transactionModel->setFilter(monthFilter);
@@ -134,8 +119,6 @@ void MonthView::updateView(){
 
     updateLabelsFromFilter("Income");
     updateLabelsFromFilter("Expense");
-
-    updateCreditReview();
 
     updateSummary();
     updatePieChart();
@@ -270,20 +253,6 @@ void MonthView::initView(){
         ui->TableViewLastEntry->setModel(transactionModel);
         ui->TableViewLastEntry->setItemDelegate(new QSqlRelationalDelegate(ui->TableViewLastEntry));
     }
-
-    numberOfCreditCards = ReportService.getCreditCardNumber();
-
-    m_labels.resize(numberOfCreditCards * numberOfLabelPerCreditCard);
-
-    for (int newLabelNumber = 0; newLabelNumber < numberOfCreditCards*numberOfLabelPerCreditCard; newLabelNumber++) {
-        m_labels[newLabelNumber] = new QLabel(this);
-        m_labels[newLabelNumber]->setVisible(true);
-        m_labels[newLabelNumber]->setText(labels[newLabelNumber % numberOfLabelPerCreditCard]);
-        
-        ui->gridLayout_2->addWidget(m_labels[newLabelNumber], newLabelNumber%numberOfLabelPerCreditCard, newLabelNumber/numberOfLabelPerCreditCard);
-        
-    }
-    ui->gridLayout_2->setHorizontalSpacing(50);
 
     for (const QString &prefix : {QString("Income"), QString("Expense")}) {
         for (int i = 1; i <= 6; ++i) {
