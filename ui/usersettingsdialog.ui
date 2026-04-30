@@ -27,7 +27,7 @@
    <item row="0" column="0">
     <widget class="QStackedWidget" name="userSettingsWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="logInWidget">
       <layout class="QGridLayout" name="gridLayout_2" rowstretch="1,1,1,2">
@@ -263,7 +263,7 @@
       <zorder>warningPasswordLabel</zorder>
      </widget>
      <widget class="QWidget" name="userWidget">
-      <layout class="QGridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0">
+      <layout class="QGridLayout" rowstretch="0,0,0,0,0,0">
        <property name="sizeConstraint">
         <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
        </property>
@@ -273,20 +273,6 @@
        <property name="verticalSpacing">
         <number>25</number>
        </property>
-       <item row="2" column="0">
-        <widget class="QPushButton" name="editEmailButton">
-         <property name="text">
-          <string>Change Email</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="editNameButton">
-         <property name="text">
-          <string>Change Name</string>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0">
         <widget class="QPushButton" name="logOutButton">
          <property name="text">
@@ -294,24 +280,42 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="4" column="1">
+        <widget class="QPushButton" name="eraseAccountButton">
+         <property name="styleSheet">
+          <string notr="true">color : red;
+font: italic;</string>
+         </property>
+         <property name="text">
+          <string>Erase Account</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QPushButton" name="editNameButton">
+         <property name="text">
+          <string>Change Name</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QPushButton" name="editEmailButton">
+         <property name="text">
+          <string>Change Email</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
         <widget class="QPushButton" name="editAccountButton">
          <property name="text">
           <string>Edit Accounts</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
+       <item row="0" column="0" colspan="2">
         <widget class="QPushButton" name="editCategoryButton">
          <property name="text">
           <string>Edit Categories</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QPushButton" name="eraseAccountButton">
-         <property name="text">
-          <string>Erase Account</string>
          </property>
         </widget>
        </item>
@@ -328,8 +332,6 @@
   <tabstop>passwordUserSignUpText_2</tabstop>
   <tabstop>birthDateUSerSignUpDate</tabstop>
   <tabstop>logInButton</tabstop>
-  <tabstop>editSettingsButton</tabstop>
-  <tabstop>logoutButton</tabstop>
   <tabstop>userEmailLogInText</tabstop>
   <tabstop>passwordLogInText</tabstop>
   <tabstop>signUpButton</tabstop>
