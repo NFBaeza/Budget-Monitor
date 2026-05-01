@@ -29,6 +29,17 @@ MonthlyReportService::MonthlyReportService(const QDate &month, const QString &us
             qDebug() << "[MonthlyReportService] ERROR loading expense categories:" << query.lastError().text();
         }
     }
+
+    if (query.prepare("SELECT name FROM categories WHERE type = 'investment' AND user_id = :user")) {
+        query.bindValue(":user", m_userId);
+        if (query.exec()) {
+            while (query.next()) {
+                m_investmentCategories.insert(query.value(0).toString().toLower());
+            }
+        } else {
+            qDebug() << "[MonthlyReportService] ERROR loading investment categories:" << query.lastError().text();
+        }
+    }
 }
 
 MonthlyReportService::~MonthlyReportService()
@@ -53,6 +64,10 @@ QString MonthlyReportService::getCategoryType(const QString &categoryName) const
 
     if(m_expenseCategories.contains(categoryName.toLower())){
         return "expense";
+    }
+
+    if(m_investmentCategories.contains(categoryName.toLower())){
+        return "investment";
     }
 
     return "transfer";
@@ -148,6 +163,12 @@ QMap<QString, MonthlyReportService::Totals> MonthlyReportService::getTotalsByTyp
     if (query.exec()) {
         while (query.next()) {
             QString name = query.value(0).toString();
+
+            if (query.value(1).toString() == "investment") {
+                response[name].investment = query.value(2).toInt();
+                continue;
+            }
+
             if (query.value(1).toString() == "expense") {
                 response[name].expenses = query.value(2).toInt();
             } else {
@@ -167,6 +188,7 @@ MonthlyReportService::Totals MonthlyReportService::getComputeTotals(const QMap<Q
         QString type = getCategoryType(it.key());
         if (type == "expense")  {totals.expenses += it.value();} 
         if (type == "income" )  {totals.incomes  += it.value();}
+        if (type == "investment" )  {totals.investment  += it.value();}
     }
     totals.savings = totals.incomes - totals.expenses;
     return totals;
