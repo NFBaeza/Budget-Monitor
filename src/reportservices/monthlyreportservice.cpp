@@ -6,40 +6,27 @@ MonthlyReportService::MonthlyReportService(const QDate &month, const QString &us
 {
     accountModel = DatabaseManager::instance().getAccountModel(nullptr);
 
-    QSqlQuery query(DatabaseManager::instance().getDatabase());
-    
-    if (query.prepare("SELECT name FROM categories WHERE type = 'income' AND user_id = :user")) {
-        query.bindValue(":user", m_userId);
-        if (query.exec()) {
-            while (query.next()) {
-                m_incomeCategories.insert(query.value(0).toString().toLower());
-            }
-        } else {
-            qDebug() << "[MonthlyReportService] ERROR loading income categories:" << query.lastError().text();
+    auto loadCategoriesByType = [this](const QString &type, QSet<QString> &out, const char *label) {
+        QSqlQuery query(DatabaseManager::instance().getDatabase());
+        if (!query.prepare("SELECT name FROM categories WHERE type = :type AND user_id = :user")) {
+            qDebug() << "[MonthlyReportService] PREPARE ERROR loading" << label << "categories:" << query.lastError().text();
+            return;
         }
-    }
+        query.bindValue(":type", type);
+        query.bindValue(":user", m_userId);
+        if (!query.exec()) {
+            qDebug() << "[MonthlyReportService] ERROR loading" << label << "categories:" << query.lastError().text();
+            return;
+        }
+        while (query.next()) {
+            out.insert(query.value(0).toString().toLower());
+        }
+        query.finish();
+    };
 
-    if (query.prepare("SELECT name FROM categories WHERE type = 'expense' AND user_id = :user")) {
-        query.bindValue(":user", m_userId);
-        if (query.exec()) {
-            while (query.next()) {
-                m_expenseCategories.insert(query.value(0).toString().toLower());
-            }
-        } else {
-            qDebug() << "[MonthlyReportService] ERROR loading expense categories:" << query.lastError().text();
-        }
-    }
-
-    if (query.prepare("SELECT name FROM categories WHERE type = 'investment' AND user_id = :user")) {
-        query.bindValue(":user", m_userId);
-        if (query.exec()) {
-            while (query.next()) {
-                m_investmentCategories.insert(query.value(0).toString().toLower());
-            }
-        } else {
-            qDebug() << "[MonthlyReportService] ERROR loading investment categories:" << query.lastError().text();
-        }
-    }
+    loadCategoriesByType("income",     m_incomeCategories,     "income");
+    loadCategoriesByType("expense",    m_expenseCategories,    "expense");
+    loadCategoriesByType("investment", m_investmentCategories, "investment");
 }
 
 MonthlyReportService::~MonthlyReportService()
