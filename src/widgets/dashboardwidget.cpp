@@ -5,9 +5,26 @@
 #include "dialogs/categorydialog.h"
 #include "dialogs/accountdialog.h"
 #include "dialogs/addingfiledialog.h"
+#include <QMessageBox>
 
 extern QString user_id;
 static QLocale s_locale(QLocale::German);
+
+static int countUserRows(const QString &table) {
+    QSqlQuery query(DatabaseManager::instance().getDatabase());
+    if (!query.prepare(QString("SELECT COUNT(*) FROM %1 WHERE user_id = :user").arg(table))) {
+        qDebug() << "[countUserRows] PREPARE ERROR:" << query.lastError().text();
+        return 0;
+    }
+    query.bindValue(":user", user_id);
+    if (!query.exec() || !query.next()) {
+        qDebug() << "[countUserRows] EXEC ERROR:" << query.lastError().text();
+        return 0;
+    }
+    int n = query.value(0).toInt();
+    query.finish();
+    return n;
+}
 
 MonthView::MonthView(QDate dateSelected, QWidget *parent) :
     QWidget(parent),
@@ -35,6 +52,9 @@ MonthView::MonthView(QDate dateSelected, QWidget *parent) :
     connect(ui->EditCategoryButton, &QPushButton::clicked, this, &MonthView::onEditButtonClicked);
     connect(ui->EditAccountButton, &QPushButton::clicked, this, [this](){
         AccountManager dialog(this);
+        connect(&dialog, &AccountManager::dataUpdated, this, [this]() {
+            updateView();
+        });
         dialog.exec();
     });
     connect(ui->addFileButton, &QPushButton::clicked, this, &MonthView::onAddFileButtonClicked);
@@ -47,6 +67,12 @@ MonthView::~MonthView() {
 }
 
 void MonthView::onAddButtonClicked() {
+    if (countUserRows("categories") == 0 || countUserRows("accounts") == 0) {
+        QMessageBox::warning(this, "Cannot add entry",
+            "Please create at least one category and one account before adding entries.");
+        return;
+    }
+
     FormDialog dialog(this);
 
     connect(&dialog, &FormDialog::dataInserted, this, [this]() {
@@ -57,6 +83,12 @@ void MonthView::onAddButtonClicked() {
 }
 
 void MonthView::onAddFileButtonClicked() {
+    if (countUserRows("accounts") == 0) {
+        QMessageBox::warning(this, "Cannot import file",
+            "Please add at least one account before importing transactions.");
+        return;
+    }
+
     AddingFileDialog dialog(this);
 
     connect(&dialog, &AddingFileDialog::dataInserted, this, [this]() {
