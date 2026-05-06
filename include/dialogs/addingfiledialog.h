@@ -3,6 +3,8 @@
 
 #include "database/databasemanager.h"
 #include "bankFactory.h"
+#include "pdfparser/bankFactory.h"
+#include "pdfparser/bank.h"
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QTextEdit>

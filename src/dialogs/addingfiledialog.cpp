@@ -1,6 +1,7 @@
 #include "dialogs/addingfiledialog.h"
 #include "database/databaseworker.h"
 #include "./ui_addingfiledialog.h"
+#include <QFileInfo>
 
 extern QString user_id;
 
@@ -18,7 +19,8 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &AddingFileDialog::onCancelClicked);
     connect(ui->fileAddButton, &QToolButton::clicked, this, [this]() {
         QString filePath = QFileDialog::getOpenFileName(
-            this, "Select a file", QString(), "Excel (*.xlsx *.xls *.csv)");
+            this, "Select a file", QString(),
+            "Statements (*.xlsx *.xls *.csv *.pdf)");
         if (!filePath.isEmpty()) {
             ui->filePathLineEdit->setText(filePath);
         }
@@ -48,30 +50,57 @@ void AddingFileDialog::onAcceptClicked() {
     }
 
     QString filePath = ui->filePathLineEdit->text();
-    auto bank = BankFactory::create(bankSelect[0], bankSelect[1], filePath);
+    const QString suffix = QFileInfo(filePath).suffix().toLower();
 
-    if (!bank) {
-        QMessageBox::warning(this, "Error", "Could not create bank reader");
-        return;
-    }
-
-    bank->readBankMovements(filePath);
-
-    if (bank->transactions.empty()) {
-        QMessageBox::warning(this, "Error", "No transactions found in file");
-        return;
-    }
-
-    // Convert transactions to QVariantList for the worker
     QVariantList txList;
-    for (const auto &t : bank->transactions) {
-        QVariantMap m;
-        m["date"] = t.date;
-        m["amount"] = t.amount;
-        m["category"] = t.category;
-        m["account"] = t.account;
-        m["description"] = t.description;
-        txList.append(m);
+
+    if (suffix == "pdf") {
+        auto bank = pdfparser::BankFactory::create(bankSelect[0], bankSelect[1], filePath);
+        if (!bank) {
+            QMessageBox::warning(this, "Error", "Could not create PDF bank reader");
+            return;
+        }
+
+        bank->readBankMovements(filePath);
+
+        const auto &txs = bank->getTransactions();
+        if (txs.isEmpty()) {
+            QMessageBox::warning(this, "Error", "No transactions found in file");
+            return;
+        }
+
+        for (const auto &t : txs) {
+            QVariantMap m;
+            m["date"] = t.date;
+            m["amount"] = t.amount;
+            m["category"] = t.category;
+            m["account"] = t.account;
+            m["description"] = t.description;
+            txList.append(m);
+        }
+    } else {
+        auto bank = BankFactory::create(bankSelect[0], bankSelect[1], filePath);
+        if (!bank) {
+            QMessageBox::warning(this, "Error", "Could not create bank reader");
+            return;
+        }
+
+        bank->readBankMovements(filePath);
+
+        if (bank->transactions.empty()) {
+            QMessageBox::warning(this, "Error", "No transactions found in file");
+            return;
+        }
+
+        for (const auto &t : bank->transactions) {
+            QVariantMap m;
+            m["date"] = t.date;
+            m["amount"] = t.amount;
+            m["category"] = t.category;
+            m["account"] = t.account;
+            m["description"] = t.description;
+            txList.append(m);
+        }
     }
 
     ui->buttonBox->setEnabled(false);
