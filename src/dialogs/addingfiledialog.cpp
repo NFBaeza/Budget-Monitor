@@ -43,19 +43,25 @@ void AddingFileDialog::onAcceptClicked() {
         return;
     }
 
-    QStringList bankSelect = ui->accountComboBox->currentText().split(" ");
-    if (bankSelect.size() < 2) {
+    const int accountRow = ui->accountComboBox->currentIndex();
+    const QString bankSelect = ui->accountComboBox->currentText();
+    if (accountRow < 0 || bankSelect.isEmpty()) {
         QMessageBox::warning(this, "Error", "Invalid account selection");
         return;
     }
 
+    const QString accountType = accountModel->record(accountRow).value("type").toString();
+
+    qDebug()<<bankSelect<<" "<<accountType;
+
     QString filePath = ui->filePathLineEdit->text();
     const QString suffix = QFileInfo(filePath).suffix().toLower();
+    const QString accountName = ui->accountComboBox->currentText();
 
     QVariantList txList;
 
     if (suffix == "pdf") {
-        auto bank = pdfparser::BankFactory::create(bankSelect[0], bankSelect[1], filePath);
+        auto bank = pdfparser::BankFactory::create(bankSelect, accountType, filePath);
         if (!bank) {
             QMessageBox::warning(this, "Error", "Could not create PDF bank reader");
             return;
@@ -74,12 +80,12 @@ void AddingFileDialog::onAcceptClicked() {
             m["date"] = t.date;
             m["amount"] = t.amount;
             m["category"] = t.category;
-            m["account"] = t.account;
+            m["account"] = accountName;
             m["description"] = t.description;
             txList.append(m);
         }
     } else {
-        auto bank = BankFactory::create(bankSelect[0], bankSelect[1], filePath);
+        auto bank = BankFactory::create(bankSelect, accountType, filePath);
         if (!bank) {
             QMessageBox::warning(this, "Error", "Could not create bank reader");
             return;
@@ -97,7 +103,7 @@ void AddingFileDialog::onAcceptClicked() {
             m["date"] = t.date;
             m["amount"] = t.amount;
             m["category"] = t.category;
-            m["account"] = t.account;
+            m["account"] = accountName;
             m["description"] = t.description;
             txList.append(m);
         }

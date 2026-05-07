@@ -205,7 +205,7 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
         QString category = t["category"].toString();
         QString account = t["account"].toString();
         QString date = t["date"].toString();
-        QString amount = t["amount"].toString();
+        qlonglong amount = t["amount"].toLongLong();
         QString description = t["description"].toString();
 
         // Resolve category ID

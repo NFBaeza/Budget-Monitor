@@ -2,7 +2,7 @@
 #define DASHBOARDWIDGET_H
 
 #include "database/databasemanager.h"
-#include "reportServices/monthlyreportservice.h"
+#include "reportservices/monthlyreportservice.h"
 #include <QWidget>
 #include <QLabel>
 #include <QSqlRecord>
