@@ -3,10 +3,13 @@
 
 #include "database/databasemanager.h"
 #include "bankFactory.h"
+#include "pdfparser/bankFactory.h"
+#include "pdfparser/bank.h"
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QTextEdit>
 #include <QMessageBox>
+#include <QProgressBar>
 #include <QSqlDatabase>
 #include <QSqlTableModel>
 #include <QSqlRelationalTableModel>

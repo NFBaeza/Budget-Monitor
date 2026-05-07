@@ -1,6 +1,7 @@
 #include "dialogs/addingfiledialog.h"
 #include "database/databaseworker.h"
 #include "./ui_addingfiledialog.h"
+#include <QFileInfo>
 
 extern QString user_id;
 
@@ -18,7 +19,8 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &AddingFileDialog::onCancelClicked);
     connect(ui->fileAddButton, &QToolButton::clicked, this, [this]() {
         QString filePath = QFileDialog::getOpenFileName(
-            this, "Select a file", QString(), "Excel (*.xlsx *.xls *.csv)");
+            this, "Select a file", QString(),
+            "Statements (*.xlsx *.xls *.csv *.pdf)");
         if (!filePath.isEmpty()) {
             ui->filePathLineEdit->setText(filePath);
         }
@@ -29,6 +31,7 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
 
     ui->accountComboBox->setModel(accountModel);
     ui->accountComboBox->setModelColumn(2);
+    ui->progressBarFiles->setVisible(false);
 }
 
 AddingFileDialog::~AddingFileDialog() {
@@ -41,45 +44,80 @@ void AddingFileDialog::onAcceptClicked() {
         return;
     }
 
-    QStringList bankSelect = ui->accountComboBox->currentText().split(" ");
-    if (bankSelect.size() < 2) {
+    const int accountRow = ui->accountComboBox->currentIndex();
+    const QString bankSelect = ui->accountComboBox->currentText();
+    if (accountRow < 0 || bankSelect.isEmpty()) {
         QMessageBox::warning(this, "Error", "Invalid account selection");
         return;
     }
 
+    const QString accountType = accountModel->record(accountRow).value("type").toString();
+
     QString filePath = ui->filePathLineEdit->text();
-    auto bank = BankFactory::create(bankSelect[0], bankSelect[1], filePath);
+    const QString suffix = QFileInfo(filePath).suffix().toLower();
+    const QString accountName = ui->accountComboBox->currentText();
 
-    if (!bank) {
-        QMessageBox::warning(this, "Error", "Could not create bank reader");
-        return;
-    }
-
-    bank->readBankMovements(filePath);
-
-    if (bank->transactions.empty()) {
-        QMessageBox::warning(this, "Error", "No transactions found in file");
-        return;
-    }
-
-    // Convert transactions to QVariantList for the worker
     QVariantList txList;
-    for (const auto &t : bank->transactions) {
-        QVariantMap m;
-        m["date"] = t.date;
-        m["amount"] = t.amount;
-        m["category"] = t.category;
-        m["account"] = t.account;
-        m["description"] = t.description;
-        txList.append(m);
+
+    if (suffix == "pdf") {
+        auto bank = pdfparser::BankFactory::create(bankSelect, accountType, filePath);
+        if (!bank) {
+            QMessageBox::warning(this, "Error", "Could not create PDF bank reader");
+            return;
+        }
+
+        bank->readBankMovements(filePath);
+
+        const auto &txs = bank->getTransactions();
+        if (txs.isEmpty()) {
+            QMessageBox::warning(this, "Error", "No transactions found in file");
+            return;
+        }
+
+        for (const auto &t : txs) {
+            QVariantMap m;
+            m["date"] = t.date;
+            m["amount"] = t.amount;
+            m["category"] = t.category;
+            m["account"] = accountName;
+            m["description"] = t.description;
+            txList.append(m);
+        }
+    } else {
+        auto bank = BankFactory::create(bankSelect, accountType, filePath);
+        if (!bank) {
+            QMessageBox::warning(this, "Error", "Could not create bank reader");
+            return;
+        }
+
+        bank->readBankMovements(filePath);
+
+        if (bank->transactions.empty()) {
+            QMessageBox::warning(this, "Error", "No transactions found in file");
+            return;
+        }
+
+        for (const auto &t : bank->transactions) {
+            QVariantMap m;
+            m["date"] = t.date;
+            m["amount"] = t.amount;
+            m["category"] = t.category;
+            m["account"] = accountName;
+            m["description"] = t.description;
+            txList.append(m);
+        }
     }
 
     ui->buttonBox->setEnabled(false);
+    ui->progressBarFiles->setVisible(true);
 
     auto *worker = DatabaseManager::instance().worker();
 
-    connect(worker, &DatabaseWorker::bulkImportProgress, this, [](int current, int total) {
-        qDebug() << "[BulkImport] Progress:" << current << "/" << total;
+    ui->progressBarFiles->setRange(0, 0);
+    connect(worker, &DatabaseWorker::bulkImportProgress, this, [this](int current, int total) {
+        ui->progressBarFiles->setRange(0, total);
+        ui->progressBarFiles->setValue(current);
+        //ui->progressBarFiles->repaint();
     });
 
     connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {

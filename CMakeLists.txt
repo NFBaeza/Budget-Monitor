@@ -94,6 +94,7 @@ set(UI_FILES
 )
 
 add_subdirectory(libs/XLSXReader)
+add_subdirectory(libs/bank-statement-parser)
 
 qt6_add_resources(RESOURCES resources.qrc)
 
@@ -123,6 +124,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Charts
     Qt6::Network
     XLSXREADER
+    PDFReader::PDFReader
     gtest
 )
 

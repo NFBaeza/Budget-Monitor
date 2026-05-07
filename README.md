@@ -14,6 +14,7 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 - **User Accounts**: Login, signup, and auto-login via Supabase authentication
 - **Database Persistence**: Data stored remotely via [Supabase](https://supabase.com/)
 - **XLSX Import**: Add transactions via XLSX bank statement files with automatic category classification
+- **PDF Import**: Add transactions via PDF bank statements (debit and credit card) using a dedicated bank-statement parser
 
 
 ## Screenshot
@@ -34,8 +35,9 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 
 ```
 budget_monitor/
-├── libs/               # External libraries
-│   └── XLSXReader/     # XLSX bank statement parser (git submodule)
+├── libs/                       # External libraries
+│   ├── XLSXReader/             # XLSX bank statement parser (git submodule)
+│   └── bank-statement-parser/  # PDF bank statement parser (git submodule)
 ├── include/            # Header files
 │   ├── database/       # Database manager and worker headers
 │   ├── dialogs/        # Dialog headers
@@ -62,7 +64,7 @@ The application uses three main tables (all scoped per user):
 - **categories**: Income and expense categories
   - `id`, `user_id`, `name`, `type` (income/expense/transfer)
 - **accounts**: Available payment accounts
-  - `id`, `user_id`, `name`, `type`, `limit`
+  - `id`, `user_id`, `name`, `type` (debit/credit/investment)
 
 ## Building from Source
 
@@ -149,9 +151,9 @@ cmake --build .
    - Choose category and payment method.
    - Write description.
    - Click OK to save.
-4. **Add XLSX**: Click "Add XLSX file" button
+4. **Import Bank Statement**: Click "Add file" button
    - Select Account **(Account must match your file)**.
-   - Add file path.
+   - Add file path (supported formats: `.xlsx`, `.xls`, `.csv`, `.pdf`).
    - Click OK to save.
 5. **Edit Table**: Double click on a transaction
    - Modify fields and press "OK" button
@@ -167,6 +169,7 @@ cmake --build .
 
 - [x] User authentication (Supabase)
 - [x] XLSX bank statement import with auto-classification
+- [x] PDF bank statement import (debit and credit cards)
 - [x] Remote database integration (Supabase)
 - [x] Date range filtering
 - [ ] Export to PDF

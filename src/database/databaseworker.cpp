@@ -83,13 +83,15 @@ void DatabaseWorker::deleteCategory(int id)
 
 // ==================== ACCOUNT OPERATIONS ====================
 
-void DatabaseWorker::addAccount(const QString &userId, const QString &name, const QString &type)
+void DatabaseWorker::addAccount(const QString &userId, const QString &name, const QString &type, qlonglong limit)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO accounts (user_id, name, type) VALUES (:user, :name, :type)");
+    query.prepare("INSERT INTO accounts (user_id, name, type, \"limit\") "
+                  "VALUES (:user, :name, :type, :limit)");
     query.bindValue(":user", userId);
     query.bindValue(":name", name);
     query.bindValue(":type", type);
+    query.bindValue(":limit", limit < 0 ? QVariant(QMetaType(QMetaType::LongLong)) : QVariant(limit));
 
     if (!query.exec()) {
         emit operationError("addAccount", query.lastError().text());
@@ -98,14 +100,21 @@ void DatabaseWorker::addAccount(const QString &userId, const QString &name, cons
     emit operationFinished("addAccount");
 }
 
-void DatabaseWorker::updateAccount(int id, const QString &newName)
+void DatabaseWorker::updateAccount(int id, const QString &newName, qlonglong limit)
 {
     QSqlQuery query(m_db);
-    query.prepare("UPDATE accounts SET name = :method WHERE id = :id");
-    query.bindValue(":method", newName);
+    if (limit < 0) {
+        query.prepare("UPDATE accounts SET name = :name WHERE id = :id");
+    } else {
+        query.prepare("UPDATE accounts SET name = :name, \"limit\" = :limit WHERE id = :id");
+        query.bindValue(":limit", limit);
+    }
+    query.bindValue(":name", newName);
     query.bindValue(":id", id);
 
     if (!query.exec()) {
+        qWarning() << "[updateAccount] exec failed:" << query.lastError().text()
+                   << "sql=" << query.lastQuery();
         emit operationError("updateAccount", query.lastError().text());
         return;
     }
@@ -205,7 +214,7 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
         QString category = t["category"].toString();
         QString account = t["account"].toString();
         QString date = t["date"].toString();
-        QString amount = t["amount"].toString();
+        qlonglong amount = t["amount"].toLongLong();
         QString description = t["description"].toString();
 
         // Resolve category ID

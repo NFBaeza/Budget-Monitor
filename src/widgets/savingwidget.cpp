@@ -71,12 +71,18 @@ void SavingView::refreshView(){
 void SavingView::updateSummary(){
     int totalSavings = 0;
     int totalIncomes = 0;
+    int totalInvestment = 0;
 
     for (int i = 0; i < displayMonths; i++) {
         totalSavings += m_monthData[i].totals.savings;
         totalIncomes += m_monthData[i].totals.incomes;
     }
 
+    for (int i = 0; i < MAX_MONTHS; i++) {
+        totalInvestment += m_monthData[i].totals.investment;
+    }
+
+    ui->labelInvestmentAmount->setText(s_locale.toString(totalInvestment));
     ui->labelTotalAmount->setText(totalSavings < 0 ? "0" : s_locale.toString(totalSavings));
     ui->labelAverageAmount->setText(s_locale.toString(totalSavings / displayMonths));
 

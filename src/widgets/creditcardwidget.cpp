@@ -21,7 +21,7 @@ CreditCardView::CreditCardView(QDate date, QWidget *parent) :
         QTimer::singleShot(0, this, [this]() { emit backToMain(); });
     }
 
-    this->setMinimumSize(750, 600);
+    this->setMinimumSize(730, 600);
 
     accountsModel = DatabaseManager::instance().getAccountModel(nullptr);
     QString creditAccountFilter = QString("accounts.type = '%1' AND accounts.user_id = '%2'").arg("credit").arg(user_id);

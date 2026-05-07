@@ -7,6 +7,9 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QPushButton>
+#include <QLabel>
+#include <QDebug>
+#include <QSqlRecord>
 
 extern QString user_id;
 
@@ -56,14 +59,28 @@ void AccountManager::onAddAccountClicked() {
 
     auto *nameEdit  = new QLineEdit(&dlg);
     auto *typeCombo = new QComboBox(&dlg);
+    auto *limitEdit = new QLineEdit(&dlg);
+    auto *limitLabel = new QLabel("Limit:", &dlg);
+
     typeCombo->addItems({"debit", "credit", "investment"});
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
 
     layout->addRow("Name:", nameEdit);
     layout->addRow("Type:", typeCombo);
+    layout->addRow(limitLabel, limitEdit);
     layout->addRow(buttons);
 
+    limitLabel->setVisible(false);
+    limitEdit->setVisible(false);
+
+    connect(typeCombo, &QComboBox::currentTextChanged, &dlg,
+        [limitLabel, limitEdit](const QString &t) {
+            const bool isCredit = (t == "credit");
+            limitLabel->setVisible(isCredit);
+            limitEdit->setVisible(isCredit);
+    });
+    
     connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
 
@@ -75,6 +92,17 @@ void AccountManager::onAddAccountClicked() {
         return;
 
     const QString type = typeCombo->currentText();
+
+    qlonglong limit = -1;
+    if (type == "credit") {
+        bool ok = false;
+        limit = limitEdit->text().trimmed().toLongLong(&ok);
+        if (!ok || limit < 0) {
+            QMessageBox::warning(this, "Invalid limit",
+                                 "Credit accounts require a non-negative limit.");
+            return;
+        }
+    }
 
     setButtonsEnabled(false);
     auto *worker = DatabaseManager::instance().worker();
@@ -97,15 +125,20 @@ void AccountManager::onAddAccountClicked() {
     QMetaObject::invokeMethod(worker, "addAccount", Qt::QueuedConnection,
                               Q_ARG(QString, user_id),
                               Q_ARG(QString, name),
-                              Q_ARG(QString, type));
+                              Q_ARG(QString, type),
+                              Q_ARG(qlonglong, limit));
 }
 
 // ==================== EDIT / DELETE ACCOUNT ====================
 
 void AccountManager::onAccountDoubleClicked(const QModelIndex &index) {
     int row = index.row();
-    int id = accountsModel->index(row, 0).data().toInt();
-    QString currentName = accountsModel->index(row, 2).data().toString();
+    const QSqlRecord rec = accountsModel->record(row);
+    const int id = rec.value(QStringLiteral("id")).toInt();
+    const QString currentName = rec.value(QStringLiteral("name")).toString();
+    const QString currentType = rec.value(QStringLiteral("type")).toString();
+    const qlonglong currentLimit = rec.value(QStringLiteral("limit")).toLongLong();
+    const bool isCredit = (currentType == "credit");
 
     QDialog dlg(this);
     dlg.setWindowTitle("Edit Account");
@@ -115,6 +148,12 @@ void AccountManager::onAccountDoubleClicked(const QModelIndex &index) {
 
     auto *nameEdit = new QLineEdit(currentName, &dlg);
     form->addRow("Name:", nameEdit);
+
+    QLineEdit *limitEdit = nullptr;
+    if (isCredit) {
+        limitEdit = new QLineEdit(QString::number(currentLimit), &dlg);
+        form->addRow("Limit:", limitEdit);
+    }
     layout->addLayout(form);
 
     auto *buttons   = new QDialogButtonBox(&dlg);
@@ -169,7 +208,23 @@ void AccountManager::onAccountDoubleClicked(const QModelIndex &index) {
                                   Q_ARG(int, id));
     } else {
         const QString newName = nameEdit->text().trimmed();
-        if (newName.isEmpty() || newName == currentName)
+        if (newName.isEmpty())
+            return;
+
+        qlonglong newLimit = -1;
+        if (isCredit) {
+            bool ok = false;
+            newLimit = limitEdit->text().trimmed().toLongLong(&ok);
+            if (!ok || newLimit < 0) {
+                QMessageBox::warning(this, "Invalid limit",
+                                     "Credit accounts require a non-negative limit.");
+                return;
+            }
+        }
+
+        const bool nameChanged  = (newName  != currentName);
+        const bool limitChanged = isCredit && (newLimit != currentLimit);
+        if (!nameChanged && !limitChanged)
             return;
 
         setButtonsEnabled(false);
@@ -191,7 +246,8 @@ void AccountManager::onAccountDoubleClicked(const QModelIndex &index) {
 
         QMetaObject::invokeMethod(worker, "updateAccount", Qt::QueuedConnection,
                                   Q_ARG(int, id),
-                                  Q_ARG(QString, newName));
+                                  Q_ARG(QString, newName),
+                                  Q_ARG(qlonglong, isCredit ? newLimit : -1));
     }
 }
 

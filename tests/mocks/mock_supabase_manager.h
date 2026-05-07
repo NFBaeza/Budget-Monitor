@@ -36,7 +36,8 @@ private:
                "  id INTEGER PRIMARY KEY,"
                "  user_id TEXT,"
                "  name TEXT,"
-               "  type TEXT"
+               "  type TEXT,"
+               "  \"limit\" INTEGER"
                ")");
 
         q.exec("CREATE TABLE transactions ("

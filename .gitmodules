@@ -1,3 +1,6 @@
 [submodule "libs/XLSXReader"]
 	path = libs/XLSXReader
 	url = git@github.com:NFBaeza/XLSXReader.git
+[submodule "libs/bank-statement-parser"]
+	path = libs/bank-statement-parser
+	url = git@github.com:NFBaeza/bank-statement-parser.git
