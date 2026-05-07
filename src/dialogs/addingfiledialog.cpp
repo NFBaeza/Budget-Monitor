@@ -31,6 +31,7 @@ AddingFileDialog::AddingFileDialog(QWidget *parent)
 
     ui->accountComboBox->setModel(accountModel);
     ui->accountComboBox->setModelColumn(2);
+    ui->progressBarFiles->setVisible(false);
 }
 
 AddingFileDialog::~AddingFileDialog() {
@@ -51,8 +52,6 @@ void AddingFileDialog::onAcceptClicked() {
     }
 
     const QString accountType = accountModel->record(accountRow).value("type").toString();
-
-    qDebug()<<bankSelect<<" "<<accountType;
 
     QString filePath = ui->filePathLineEdit->text();
     const QString suffix = QFileInfo(filePath).suffix().toLower();
@@ -110,11 +109,15 @@ void AddingFileDialog::onAcceptClicked() {
     }
 
     ui->buttonBox->setEnabled(false);
+    ui->progressBarFiles->setVisible(true);
 
     auto *worker = DatabaseManager::instance().worker();
 
-    connect(worker, &DatabaseWorker::bulkImportProgress, this, [](int current, int total) {
-        qDebug() << "[BulkImport] Progress:" << current << "/" << total;
+    ui->progressBarFiles->setRange(0, 0);
+    connect(worker, &DatabaseWorker::bulkImportProgress, this, [this](int current, int total) {
+        ui->progressBarFiles->setRange(0, total);
+        ui->progressBarFiles->setValue(current);
+        //ui->progressBarFiles->repaint();
     });
 
     connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {

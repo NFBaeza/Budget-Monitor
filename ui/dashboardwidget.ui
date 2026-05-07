@@ -456,7 +456,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Add file XlSX</string>
+        <string>Add bank statement</string>
        </property>
       </widget>
      </item>

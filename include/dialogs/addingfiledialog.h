@@ -9,6 +9,7 @@
 #include <QDialogButtonBox>
 #include <QTextEdit>
 #include <QMessageBox>
+#include <QProgressBar>
 #include <QSqlDatabase>
 #include <QSqlTableModel>
 #include <QSqlRelationalTableModel>
