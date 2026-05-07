@@ -22,8 +22,8 @@ public slots:
     void deleteCategory(int id);
 
     // Account operations
-    void addAccount(const QString &userId, const QString &name, const QString &type);
-    void updateAccount(int id, const QString &newName);
+    void addAccount(const QString &userId, const QString &name, const QString &type, qlonglong limit = -1);
+    void updateAccount(int id, const QString &newName, qlonglong limit = -1);
     void deleteAccount(int id);
 
     // Transaction operations
