@@ -83,12 +83,13 @@ void DatabaseWorker::deleteCategory(int id)
 
 // ==================== ACCOUNT OPERATIONS ====================
 
-void DatabaseWorker::addAccount(const QString &userId, const QString &name)
+void DatabaseWorker::addAccount(const QString &userId, const QString &name, const QString &type)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO accounts (user_id, name) VALUES (:user, :method)");
-    query.bindValue(":method", name);
+    query.prepare("INSERT INTO accounts (user_id, name, type) VALUES (:user, :name, :type)");
     query.bindValue(":user", userId);
+    query.bindValue(":name", name);
+    query.bindValue(":type", type);
 
     if (!query.exec()) {
         emit operationError("addAccount", query.lastError().text());
@@ -131,14 +132,15 @@ void DatabaseWorker::insertTransaction(const QString &userId, const QString &dat
                                        const QString &description)
 {
     QSqlQuery query(m_db);
-    query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description) "
-                  "VALUES (:user_id, :date, :amount, :category, :account, :description)");
+    query.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
+                  "VALUES (:user_id, :date, :amount, :category, :account, :description, :original_description)");
     query.bindValue(":user_id", userId);
     query.bindValue(":date", date);
     query.bindValue(":amount", amount);
     query.bindValue(":category", categoryId);
     query.bindValue(":account", accountId);
     query.bindValue(":description", description);
+    query.bindValue(":original_description", description);
 
     if (!query.exec()) {
         emit operationError("insertTransaction", query.lastError().text());
@@ -156,8 +158,6 @@ void DatabaseWorker::updateTransaction(int id, const QString &userId, const QStr
                   "SET user_id = :user_id, date = :date, amount = :amount, category_id = :category, "
                   "account_id = :account, description = :description "
                   "WHERE id = :id");
-    // NOTE: original_description is intentionally NOT updated here — it is immutable
-    //       and used for duplicate detection on re-import.
     query.bindValue(":id", id);
     query.bindValue(":user_id", userId);
     query.bindValue(":date", date);
@@ -205,7 +205,7 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
         QString category = t["category"].toString();
         QString account = t["account"].toString();
         QString date = t["date"].toString();
-        QString amount = t["amount"].toString();
+        qlonglong amount = t["amount"].toLongLong();
         QString description = t["description"].toString();
 
         // Resolve category ID
@@ -227,9 +227,7 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
                 QSqlQuery insertCat(m_db);
                 insertCat.prepare("INSERT INTO categories (user_id, name, type) VALUES (:user, :category, :type)");
                 insertCat.bindValue(":category", category);
-                const QString lowerCat = category.toLower();
-                const bool isIncome = (lowerCat == "paycheck" || lowerCat == "deposit");
-                insertCat.bindValue(":type", isIncome ? "income" : "expense");
+                insertCat.bindValue(":type", (category.toLower() == "abonos") ? "income" : "expense");
                 insertCat.bindValue(":user", userId);
                 if (!insertCat.exec()) {
                     emit operationError("bulkImport", insertCat.lastError().text());
@@ -269,20 +267,20 @@ void DatabaseWorker::bulkImportTransactions(const QString &userId,
             accountCache[account] = accountId;
         }
 
-        // Insert transaction (skip silently if duplicate based on original_description)
+        // Insert transaction
         QSqlQuery insertQuery(m_db);
         insertQuery.prepare("INSERT INTO money_transactions (user_id, date, amount, category_id, account_id, description, original_description) "
-                            "VALUES (:user, :date, :amount, :category, :account, :description, :original_description) "
-                            "ON CONFLICT (user_id, date, amount, account_id, original_description) DO NOTHING");
+                            "VALUES (:user, :date, :amount, :category, :account, :description, :original_description)");
         insertQuery.bindValue(":user", userId);
         insertQuery.bindValue(":date", date);
         insertQuery.bindValue(":amount", amount);
         insertQuery.bindValue(":category", categoryId);
         insertQuery.bindValue(":account", accountId);
         insertQuery.bindValue(":description", description);
-        insertQuery.bindValue(":original_description", description);
 
         if (!insertQuery.exec()) {
+            if (insertQuery.lastError().nativeErrorCode() == "23505")
+                continue; // duplicate — skip
             emit operationError("bulkImport", insertQuery.lastError().text());
             return;
         }

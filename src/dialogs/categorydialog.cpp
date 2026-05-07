@@ -2,6 +2,12 @@
 #include "database/databaseworker.h"
 #include "./ui_categorydialog.h"
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QFormLayout>
+#include <QWidget>
+#include <QApplication>
+
 extern QString user_id;
 
 CategoryDialog::CategoryDialog(QWidget *parent)
@@ -10,404 +16,218 @@ CategoryDialog::CategoryDialog(QWidget *parent)
 {
     ui->setupUi(this);
 
-    incomeModel = DatabaseManager::instance().getIncomeModel(this);
-    expenseModel = DatabaseManager::instance().getExpenseModel(this);
-    accountModel = DatabaseManager::instance().getAccountModel(this);
+    categoryModel = DatabaseManager::instance().getCategoryModel(this);
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &CategoryDialog::onSaveClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &CategoryDialog::onCancelClicked);
 
-    // Connect Income buttons
-    connect(ui->IncomeAddButton, &QToolButton::clicked, this, &CategoryDialog::onAddIncomeClicked);
-    connect(ui->IncomeRemoveButton, &QToolButton::clicked, this, &CategoryDialog::onDeleteIncomeClicked);
-    connect(ui->listIncomeView, &QListView::doubleClicked, this, &CategoryDialog::onIncomeDoubleClicked);
-
-    // Connect Expense buttons
-    connect(ui->ExpenseAddButton, &QToolButton::clicked, this, &CategoryDialog::onAddExpenseClicked);
-    connect(ui->ExpenseRemoveButton, &QToolButton::clicked, this, &CategoryDialog::onDeleteExpenseClicked);
-    connect(ui->listExpenseView, &QListView::doubleClicked, this, &CategoryDialog::onExpenseDoubleClicked);
-
-    // Connect Account buttons
-    connect(ui->AccountAddButton, &QToolButton::clicked, this, &CategoryDialog::onAddAccountClicked);
-    connect(ui->AccountRemoveButton, &QToolButton::clicked, this, &CategoryDialog::onDeleteAccountClicked);
-    connect(ui->listAccountView, &QListView::doubleClicked, this, &CategoryDialog::onAccountDoubleClicked);
+    connect(ui->AddButton, &QToolButton::clicked, this, &CategoryDialog::onAddClicked);
+    connect(ui->RemoveButton, &QToolButton::clicked, this, &CategoryDialog::onDeleteClicked);
 
     initView();
 }
 
 CategoryDialog::~CategoryDialog() {
-    incomeModel->clear();
-    expenseModel->clear();
-    accountModel->clear();
+    categoryModel->clear();
     delete ui;
 }
 
 void CategoryDialog::initView() {
-    incomeModel->select();
-    expenseModel->select();
-    accountModel->select();
-
-    ui->listIncomeView->setModel(incomeModel);
-    ui->listIncomeView->setModelColumn(2);
-
-    ui->listExpenseView->setModel(expenseModel);
-    ui->listExpenseView->setModelColumn(2);
-
-    ui->listAccountView->setModel(accountModel);
-    ui->listAccountView->setModelColumn(2);
+    categoryModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    loadCategories();
 }
 
 void CategoryDialog::loadCategories() {
-    incomeModel->select();
-    expenseModel->select();
+    categoryModel->select();
+    rebuildCategoryRows();
 }
 
-void CategoryDialog::loadAccounts() {
-    accountModel->select();
+void CategoryDialog::runWorkerOp(const QString &opName,
+                                  const QString &errorLabel,
+                                  std::function<void(DatabaseWorker*)> invoke)
+{
+    setButtonsEnabled(false);
+    auto *worker = DatabaseManager::instance().worker();
+
+    connect(worker, &DatabaseWorker::operationFinished, this,
+            [this, opName](const QString &op) {
+        if (op == opName) {
+            loadCategories();
+            setButtonsEnabled(true);
+            emit dataUpdated();
+        }
+    }, Qt::SingleShotConnection);
+
+    connect(worker, &DatabaseWorker::operationError, this,
+            [this, opName, errorLabel](const QString &op, const QString &err) {
+        if (op == opName) {
+            QMessageBox::critical(this, "Error",
+                QString("Failed to %1: ").arg(errorLabel) + err);
+            setButtonsEnabled(true);
+        }
+    }, Qt::SingleShotConnection);
+
+    invoke(worker);
+}
+
+void CategoryDialog::rebuildCategoryRows() {
+    auto *layout = ui->categoriesLayout;
+    QLayoutItem *item;
+    while ((item = layout->takeAt(0)) != nullptr) {
+        if (auto *w = item->widget()) {
+            w->deleteLater();
+        }
+        delete item;
+    }
+    categoryRows.clear();
+
+    const int rowCount = categoryModel->rowCount();
+    for (int row = 0; row < rowCount; ++row) {
+        const int id = categoryModel->index(row, 0).data().toInt();
+        const QString name = categoryModel->index(row, 2).data().toString();
+        const QString type = categoryModel->index(row, 3).data().toString();
+
+        auto *rowWidget = new QWidget(ui->scrollAreaWidgetContents);
+        auto *rowLayout = new QHBoxLayout(rowWidget);
+        rowLayout->setContentsMargins(0, 0, 0, 0);
+
+        auto *nameEdit = new QLineEdit(name, rowWidget);
+        auto *typeCombo = new QComboBox(rowWidget);
+        typeCombo->addItems({"income", "expense", "investment"});
+        const int idx = typeCombo->findText(type);
+        if (idx >= 0) {
+            typeCombo->setCurrentIndex(idx);
+        }
+
+        rowLayout->addWidget(nameEdit);
+        rowLayout->addWidget(typeCombo);
+        layout->addWidget(rowWidget);
+
+        categoryRows.append({id, name, type, nameEdit, typeCombo});
+    }
+    layout->addStretch();
 }
 
 void CategoryDialog::setButtonsEnabled(bool enabled) {
     ui->buttonBox->setEnabled(enabled);
-    ui->IncomeAddButton->setEnabled(enabled);
-    ui->IncomeRemoveButton->setEnabled(enabled);
-    ui->ExpenseAddButton->setEnabled(enabled);
-    ui->ExpenseRemoveButton->setEnabled(enabled);
-    ui->AccountAddButton->setEnabled(enabled);
-    ui->AccountRemoveButton->setEnabled(enabled);
+    ui->AddButton->setEnabled(enabled);
+    ui->RemoveButton->setEnabled(enabled);
 }
 
-// ==================== INCOME ====================
+// ==================== ADD / DELETE ====================
 
-void CategoryDialog::onAddIncomeClicked() {
-    bool ok;
-    QString categoryName = QInputDialog::getText(this, "Add Income Category",
-                                                  "Category name:",
-                                                  QLineEdit::Normal, "", &ok);
+void CategoryDialog::onAddClicked() {
+    QDialog dlg(this);
+    dlg.setWindowTitle("Add Category");
+    auto *form = new QFormLayout(&dlg);
 
-    if (ok && !categoryName.isEmpty()) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
+    auto *nameEdit = new QLineEdit(&dlg);
+    auto *typeCombo = new QComboBox(&dlg);
+    typeCombo->addItems({"income", "expense", "investment"});
 
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "addCategory") {
-                loadCategories();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
+    form->addRow("Name:", nameEdit);
+    form->addRow("Type:", typeCombo);
 
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "addCategory") {
-                QMessageBox::critical(this, "Error", "Failed to add category: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
+    auto *buttons = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dlg);
+    form->addRow(buttons);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
 
-        QMetaObject::invokeMethod(worker, "addCategory", Qt::QueuedConnection,
-                                  Q_ARG(QString, user_id),
-                                  Q_ARG(QString, categoryName),
-                                  Q_ARG(QString, "income"));
+    if (dlg.exec() != QDialog::Accepted) {
+        return;
     }
+
+    const QString categoryName = nameEdit->text().trimmed();
+    const QString categoryType = typeCombo->currentText();
+    if (categoryName.isEmpty()) {
+        return;
+    }
+
+    runWorkerOp("addCategory", "add category",
+        [categoryName, categoryType](DatabaseWorker *worker) {
+            QMetaObject::invokeMethod(worker, "addCategory", Qt::QueuedConnection,
+                                      Q_ARG(QString, user_id),
+                                      Q_ARG(QString, categoryName),
+                                      Q_ARG(QString, categoryType));
+        });
 }
 
-void CategoryDialog::onDeleteIncomeClicked() {
-    QModelIndex currentIndex = ui->listIncomeView->currentIndex();
+void CategoryDialog::onDeleteClicked() {
+    QWidget *focus = QApplication::focusWidget();
+    int targetId = -1;
+    QString targetName;
+    for (const auto &row : categoryRows) {
+        const bool focused = focus &&
+            (focus == row.nameEdit || focus == row.typeCombo
+             || row.nameEdit->isAncestorOf(focus)
+             || row.typeCombo->isAncestorOf(focus));
+        if (focused) {
+            targetId = row.id;
+            targetName = row.originalName;
+            break;
+        }
+    }
 
-    if (!currentIndex.isValid()) {
+    if (targetId < 0) {
         QMessageBox::warning(this, "Warning", "Please select a category to delete");
         return;
     }
 
-    int row = currentIndex.row();
-    int id = incomeModel->index(row, 0).data().toInt();
-    QString categoryName = incomeModel->index(row, 2).data().toString();
-
     QMessageBox::StandardButton reply = QMessageBox::question(
         this, "Confirm Delete",
-        QString("Delete '%1' category?\n\nWarning: This may affect existing transactions.").arg(categoryName),
+        QString("Delete '%1' category?\n\nWarning: This may affect existing transactions.").arg(targetName),
         QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "deleteCategory") {
-                loadCategories();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "deleteCategory") {
-                QMessageBox::critical(this, "Error", "Failed to delete category: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "deleteCategory", Qt::QueuedConnection,
-                                  Q_ARG(int, id));
+        runWorkerOp("deleteCategory", "delete category",
+            [targetId](DatabaseWorker *worker) {
+                QMetaObject::invokeMethod(worker, "deleteCategory", Qt::QueuedConnection,
+                                          Q_ARG(int, targetId));
+            });
     }
 }
 
-void CategoryDialog::onIncomeDoubleClicked(const QModelIndex &index) {
-    int row = index.row();
-    int id = incomeModel->index(row, 0).data().toInt();
-    QString oldName = incomeModel->index(row, 2).data().toString();
-
-    bool ok;
-    QString newName = QInputDialog::getText(this, "Edit Income Category",
-                                            "Category name:",
-                                            QLineEdit::Normal, oldName, &ok);
-
-    if (ok && !newName.isEmpty() && newName != oldName) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "updateCategory") {
-                loadCategories();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "updateCategory") {
-                QMessageBox::critical(this, "Error", "Failed to update category: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "updateCategory", Qt::QueuedConnection,
-                                  Q_ARG(int, id),
-                                  Q_ARG(QString, newName));
-    }
-}
-
-// ==================== EXPENSE ====================
-
-void CategoryDialog::onAddExpenseClicked() {
-    bool ok;
-    QString categoryName = QInputDialog::getText(this, "Add Expense Category",
-                                                  "Category name:",
-                                                  QLineEdit::Normal, "", &ok);
-
-    if (ok && !categoryName.isEmpty()) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "addCategory") {
-                loadCategories();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "addCategory") {
-                QMessageBox::critical(this, "Error", "Failed to add category: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "addCategory", Qt::QueuedConnection,
-                                  Q_ARG(QString, user_id),
-                                  Q_ARG(QString, categoryName),
-                                  Q_ARG(QString, "expense"));
-    }
-}
-
-void CategoryDialog::onDeleteExpenseClicked() {
-    QModelIndex currentIndex = ui->listExpenseView->currentIndex();
-
-    if (!currentIndex.isValid()) {
-        QMessageBox::warning(this, "Warning", "Please select a category to delete");
-        return;
-    }
-
-    int row = currentIndex.row();
-    int id = expenseModel->index(row, 0).data().toInt();
-    QString categoryName = expenseModel->index(row, 2).data().toString();
-
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, "Confirm Delete",
-        QString("Delete '%1' category?\n\nWarning: This may affect existing transactions.").arg(categoryName),
-        QMessageBox::Yes | QMessageBox::No);
-
-    if (reply == QMessageBox::Yes) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "deleteCategory") {
-                loadCategories();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "deleteCategory") {
-                QMessageBox::critical(this, "Error", "Failed to delete category: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "deleteCategory", Qt::QueuedConnection,
-                                  Q_ARG(int, id));
-    }
-}
-
-void CategoryDialog::onExpenseDoubleClicked(const QModelIndex &index) {
-    int row = index.row();
-    int id = expenseModel->index(row, 0).data().toInt();
-    QString oldName = expenseModel->index(row, 2).data().toString();
-
-    bool ok;
-    QString newName = QInputDialog::getText(this, "Edit Expense Category",
-                                            "Category name:",
-                                            QLineEdit::Normal, oldName, &ok);
-
-    if (ok && !newName.isEmpty() && newName != oldName) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "updateCategory") {
-                loadCategories();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "updateCategory") {
-                QMessageBox::critical(this, "Error", "Failed to update category: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "updateCategory", Qt::QueuedConnection,
-                                  Q_ARG(int, id),
-                                  Q_ARG(QString, newName));
-    }
-}
-
-// ==================== ACCOUNTS ====================
-
-void CategoryDialog::onAddAccountClicked() {
-    bool ok;
-    QString accountName = QInputDialog::getText(this, "Add Payment Method",
-                                                "Method name:",
-                                                QLineEdit::Normal, "", &ok);
-
-    if (ok && !accountName.isEmpty()) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "addAccount") {
-                loadAccounts();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "addAccount") {
-                QMessageBox::critical(this, "Error", "Failed to add payment method: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "addAccount", Qt::QueuedConnection,
-                                  Q_ARG(QString, user_id),
-                                  Q_ARG(QString, accountName));
-    }
-}
-
-void CategoryDialog::onDeleteAccountClicked() {
-    QModelIndex currentIndex = ui->listAccountView->currentIndex();
-
-    if (!currentIndex.isValid()) {
-        QMessageBox::warning(this, "Warning", "Please select an account to delete");
-        return;
-    }
-
-    int row = currentIndex.row();
-    int id = accountModel->index(row, 0).data().toInt();
-    QString accountName = accountModel->index(row, 2).data().toString();
-
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, "Confirm Delete",
-        QString("Delete '%1' payment method?\n\nWarning: This may affect existing transactions.").arg(accountName),
-        QMessageBox::Yes | QMessageBox::No);
-
-    if (reply == QMessageBox::Yes) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "deleteAccount") {
-                loadAccounts();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "deleteAccount") {
-                QMessageBox::critical(this, "Error", "Failed to delete payment method: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "deleteAccount", Qt::QueuedConnection,
-                                  Q_ARG(int, id));
-    }
-}
-
-void CategoryDialog::onAccountDoubleClicked(const QModelIndex &index) {
-    int row = index.row();
-    int id = accountModel->index(row, 0).data().toInt();
-    QString oldName = accountModel->index(row, 2).data().toString();
-
-    bool ok;
-    QString newName = QInputDialog::getText(this, "Edit Payment Method",
-                                            "Method name:",
-                                            QLineEdit::Normal, oldName, &ok);
-
-    if (ok && !newName.isEmpty() && newName != oldName) {
-        setButtonsEnabled(false);
-        auto *worker = DatabaseManager::instance().worker();
-
-        connect(worker, &DatabaseWorker::operationFinished, this, [this](const QString &op) {
-            if (op == "updateAccount") {
-                loadAccounts();
-                setButtonsEnabled(true);
-                emit dataUpdated();
-            }
-        }, Qt::SingleShotConnection);
-
-        connect(worker, &DatabaseWorker::operationError, this, [this](const QString &op, const QString &err) {
-            if (op == "updateAccount") {
-                QMessageBox::critical(this, "Error", "Failed to update payment method: " + err);
-                setButtonsEnabled(true);
-            }
-        }, Qt::SingleShotConnection);
-
-        QMetaObject::invokeMethod(worker, "updateAccount", Qt::QueuedConnection,
-                                  Q_ARG(int, id),
-                                  Q_ARG(QString, newName));
-    }
+void CategoryDialog::onDoubleClicked(const QModelIndex &index) {
+    Q_UNUSED(index);
 }
 
 // ==================== SAVE / CANCEL ====================
 
 void CategoryDialog::onSaveClicked() {
+    bool dirty = false;
+    for (const auto &row : categoryRows) {
+        const QString newName = row.nameEdit->text();
+        const QString newType = row.typeCombo->currentText();
+        if (newName == row.originalName && newType == row.originalType) {
+            continue;
+        }
+
+        for (int i = 0; i < categoryModel->rowCount(); ++i) {
+            if (categoryModel->index(i, 0).data().toInt() != row.id) {
+                continue;
+            }
+            if (newName != row.originalName) {
+                categoryModel->setData(categoryModel->index(i, 2), newName);
+            }
+            if (newType != row.originalType) {
+                categoryModel->setData(categoryModel->index(i, 3), newType);
+            }
+            dirty = true;
+            break;
+        }
+    }
+
+    if (dirty && !categoryModel->submitAll()) {
+        QMessageBox::critical(this, "Error",
+            "Failed to save changes: " + categoryModel->lastError().text());
+        categoryModel->revertAll();
+        return;
+    }
+
+    if (dirty) {
+        emit dataUpdated();
+    }
     accept();
 }
 

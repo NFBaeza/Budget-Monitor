@@ -19,6 +19,7 @@ public:
         QString bankName;
         int incomes  = 0;
         int expenses = 0;
+        int investment = 0;
         int savings  = 0;
     };
 
@@ -48,6 +49,8 @@ private:
     QDate         m_month;
     QString       m_userId;
     QSet<QString> m_incomeCategories;
+    QSet<QString> m_expenseCategories;
+    QSet<QString> m_investmentCategories;
     QSqlTableModel *accountModel{nullptr};
 
     QPair<QDate, QDate> dateRange(const QDate &month = QDate()) const;

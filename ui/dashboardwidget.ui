@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>990</width>
-    <height>652</height>
+    <width>1132</width>
+    <height>689</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,15 +27,21 @@
   <property name="windowTitle">
    <string>Month View</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,3,0">
+  <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0" columnstretch="1,1,3,0">
    <property name="leftMargin">
     <number>12</number>
    </property>
    <property name="rightMargin">
     <number>10</number>
    </property>
+   <property name="bottomMargin">
+    <number>10</number>
+   </property>
    <property name="horizontalSpacing">
     <number>10</number>
+   </property>
+   <property name="verticalSpacing">
+    <number>15</number>
    </property>
    <item row="2" column="0">
     <layout class="QFormLayout" name="IncomesLayout">
@@ -392,35 +398,6 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <property name="leftMargin">
-      <number>120</number>
-     </property>
-     <property name="rightMargin">
-      <number>120</number>
-     </property>
-     <item>
-      <widget class="QPushButton" name="EditCategoryButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>150</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Edit</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
    <item row="3" column="2" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <property name="spacing">
@@ -448,6 +425,19 @@
        </property>
        <property name="text">
         <string>Add Entry</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="checkCreditCardButton">
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Check Credit Card</string>
        </property>
       </widget>
      </item>
@@ -557,202 +547,220 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="spacing">
+      <number>50</number>
+     </property>
+     <property name="leftMargin">
+      <number>50</number>
+     </property>
+     <property name="rightMargin">
+      <number>50</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="EditAccountButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Edit Accounts</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="EditCategoryButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>150</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Edit Categories</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item row="1" column="2" rowspan="2">
-    <widget class="QTabWidget" name="typeAccountView">
+    <widget class="QFrame" name="typeAccountView">
      <property name="layoutDirection">
       <enum>Qt::LayoutDirection::RightToLeft</enum>
      </property>
-     <property name="tabPosition">
-      <enum>QTabWidget::TabPosition::North</enum>
-     </property>
-     <property name="tabShape">
-      <enum>QTabWidget::TabShape::Rounded</enum>
-     </property>
-     <property name="currentIndex">
-      <number>1</number>
-     </property>
-     <widget class="QWidget" name="debitPage">
-      <attribute name="title">
-       <string>General</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
-         <property name="text">
-          <string>Sumary</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_2">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="TotalSavingsLabel">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Total of Savings</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="TotalSavingsAmount">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="TotalIncomesLabel">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::NoFrame</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Plain</enum>
-         </property>
-         <property name="lineWidth">
-          <number>0</number>
-         </property>
-         <property name="text">
-          <string>Total of Incomes</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::TextFormat::AutoText</enum>
-         </property>
-         <property name="scaledContents">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="TotalIncomesAmount">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="TotalExpensesLabel">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <italic>false</italic>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Total of Expenses</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="TotalExpensesAmount">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <property name="spacing">
-          <number>5</number>
-         </property>
-         <property name="sizeConstraint">
-          <enum>QLayout::SizeConstraint::SetFixedSize</enum>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QLabel" name="label_3">
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <italic>true</italic>
-            </font>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Shadow::Raised</enum>
-           </property>
-           <property name="text">
-            <string>Last Entries</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QTableView" name="TableViewLastEntry">
-           <property name="minimumSize">
-            <size>
-             <width>500</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="layoutDirection">
-            <enum>Qt::LayoutDirection::LeftToRight</enum>
-           </property>
-           <property name="editTriggers">
-            <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-           </property>
-           <property name="sortingEnabled">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="creditPage">
-      <property name="layoutDirection">
-       <enum>Qt::LayoutDirection::LeftToRight</enum>
-      </property>
-      <attribute name="title">
-       <string>Credit</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <property name="leftMargin">
-        <number>10</number>
-       </property>
-       <property name="rightMargin">
-        <number>12</number>
-       </property>
-       <property name="horizontalSpacing">
-        <number>30</number>
-       </property>
-      </layout>
-     </widget>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <property name="text">
+         <string>Sumary</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalSavingsLabel">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Total of Savings</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalSavingsAmount">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalIncomesLabel">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::NoFrame</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Plain</enum>
+        </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+        <property name="text">
+         <string>Total of Incomes</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::TextFormat::AutoText</enum>
+        </property>
+        <property name="scaledContents">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalIncomesAmount">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalExpensesLabel">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <italic>false</italic>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Total of Expenses</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="TotalExpensesAmount">
+        <property name="text">
+         <string>0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="spacing">
+         <number>5</number>
+        </property>
+        <property name="sizeConstraint">
+         <enum>QLayout::SizeConstraint::SetFixedSize</enum>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+            <italic>true</italic>
+           </font>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Shadow::Raised</enum>
+          </property>
+          <property name="text">
+           <string>Last Entries</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTableView" name="TableViewLastEntry">
+          <property name="minimumSize">
+           <size>
+            <width>500</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::LayoutDirection::LeftToRight</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

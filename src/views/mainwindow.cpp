@@ -54,7 +54,7 @@ void MainWindow::onPastMonthsButtonPressed() {
         MonthSelectorDialog *dialog = new MonthSelectorDialog(this);
         connect(dialog, &MonthSelectorDialog::monthClicked, this, [this](QDate date) {
             MonthView *monthView = new MonthView(date, this);
-            connect(monthView, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
+            connect(monthView, &MonthView::backButtonWasPressed, this, &MainWindow::showMainView);
             setCentralWidget(monthView);
             setMinimumSize(monthView->minimumSize());
             resize(monthView->minimumSize());
@@ -105,7 +105,8 @@ void MainWindow::onCreditCardButtonPressed() {
 void MainWindow::onCurrentMonthPressed() {
     if(!user_id.isEmpty()){
         MonthView *dashboard = new MonthView(QDate::currentDate(), this);
-        connect(dashboard, &MonthView::backbutton_was_pressed, this, &MainWindow::showMainView);
+        connect(dashboard, &MonthView::backButtonWasPressed, this, &MainWindow::showMainView);
+        connect(dashboard, &MonthView::creditcardButtonWasPressed, this, &MainWindow::onCreditCardButtonPressed);
         setCentralWidget(dashboard);
         setMinimumSize(dashboard->minimumSize());
         resize(dashboard->minimumSize());

@@ -2,7 +2,7 @@
 #define DASHBOARDWIDGET_H
 
 #include "database/databasemanager.h"
-#include "reportServices/monthlyreportservice.h"
+#include "reportservices/monthlyreportservice.h"
 #include <QWidget>
 #include <QLabel>
 #include <QSqlRecord>
@@ -31,10 +31,10 @@ public:
     ~MonthView();
 
 signals:
-    void backbutton_was_pressed(); 
+    void backButtonWasPressed(); 
+    void creditcardButtonWasPressed();
 
 private slots:
-    void backButtonWasPressed();
     void onAddButtonClicked();
     void onTableRowDoubleClicked(const QModelIndex &index);
     void onEditButtonClicked();
@@ -48,15 +48,10 @@ private:
     QString monthFilter;
     QString monthName;
     QDate dateViewSelected;
-
-    int numberOfCreditCards = 0;
-    int maxNumberOfCreditCardsCanDisplay = 3;
-    int numberOfLabelPerCreditCard = 7;
     
     MonthlyReportService::Totals totals;
     QMap<QString, int> amountByCategoryMap;
 
-    QStringList labels = {"name","Used Credit","0","Available Credit","0","Limit Credit","0"};
     QVector<QLabel*> m_labels;
     QMap<QString, QLabel*> m_labelCache;
 
@@ -68,7 +63,6 @@ private:
     void updateCategories();
     void updateView();
     void onAddFileButtonClicked();
-    void updateCreditReview();
 };
 
 #endif

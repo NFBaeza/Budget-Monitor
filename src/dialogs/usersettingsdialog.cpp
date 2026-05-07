@@ -1,6 +1,7 @@
 #include "dialogs/usersettingsdialog.h"
 #include "database/databaseworker.h"
 #include "dialogs/categorydialog.h"
+#include "dialogs/accountdialog.h"
 #include "appstate.h"
 #include "./ui_usersettingsdialog.h"
 #include <QNetworkRequest>
@@ -54,7 +55,7 @@ UserSettingsDialog::UserSettingsDialog(QWidget *parent)
     });
 
     connect(ui->editAccountButton, &QPushButton::pressed, this, [this](){
-        CategoryDialog dialog(this);
+        AccountManager dialog(this);
         dialog.exec();
     });
 

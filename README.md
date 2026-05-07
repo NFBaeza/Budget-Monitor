@@ -8,14 +8,17 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 - **Category-based Organization**: Separate income and expense categories
 - **Visual Analytics**: Pie chart visualization of expense distribution
 - **Monthly View**: Analyze transactions by month and yearly Savings.
+- **Credit Cards preview**: Analyze usage and future payments.
 - **Real-time Updates**: Dashboard updates automatically when new transactions are added
 - **Multiple Payment Methods**: Support for different payment accounts
 - **User Accounts**: Login, signup, and auto-login via Supabase authentication
 - **Database Persistence**: Data stored remotely via [Supabase](https://supabase.com/)
 - **XLSX Import**: Add transactions via XLSX bank statement files with automatic category classification
+- **PDF Import**: Add transactions via PDF bank statements (debit and credit card) using a dedicated bank-statement parser
 
 
 ## Screenshot
+![Login UI](./imgs/ui_login.png)
 ![Month View UI](./imgs/ui_MonthView.png)
 
 ## Technical Stack
@@ -32,15 +35,18 @@ A desktop application for personal finance management built with Qt6 and C++. Tr
 
 ```
 budget_monitor/
-├── libs/               # External libraries
-│   └── XLSXReader/     # XLSX bank statement parser (git submodule)
+├── libs/                       # External libraries
+│   ├── XLSXReader/             # XLSX bank statement parser (git submodule)
+│   └── bank-statement-parser/  # PDF bank statement parser (git submodule)
 ├── include/            # Header files
 │   ├── database/       # Database manager and worker headers
 │   ├── dialogs/        # Dialog headers
+│   ├── reportservice/  # Compute methods header
 │   ├── views/          # Main window headers
 │   └── widgets/        # Widget headers (Dashboard)
 ├── src/                # Source files
 │   ├── database/       # Database manager and worker implementations
+│   ├── reportservice/  # Compute Summaries and total by card
 │   ├── dialogs/        # Dialog implementations
 │   ├── views/          # View implementations
 │   └── widgets/        # Widget implementations
@@ -54,11 +60,11 @@ budget_monitor/
 The application uses three main tables (all scoped per user):
 
 - **money_transactions**: Stores all financial transactions
-  - `id`, `user_id`, `date`, `amount`, `category_id` (FK), `account_id` (FK), `description`
+  - `id`, `user_id`, `date`, `amount`, `category_id` (FK), `account_id` (FK), `description`, `original_description`
 - **categories**: Income and expense categories
-  - `id`, `user_id`, `name`, `type` (income/expense)
+  - `id`, `user_id`, `name`, `type` (income/expense/transfer)
 - **accounts**: Available payment accounts
-  - `id`, `user_id`, `name`
+  - `id`, `user_id`, `name`, `type` (debit/credit/investment)
 
 ## Building from Source
 
@@ -105,6 +111,7 @@ DB_PASSWORD=your-db-password
 # Supabase authentication
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 You can find these values in your Supabase dashboard under **Project Settings > Database** and **Project Settings > API**.
@@ -134,24 +141,25 @@ cmake --build .
 ## Usage
 
 1. **Launch Application**:
-   - Click "Current Month" to access the current dashboard
-   - Click "Savings" to access the yearly savings analysis
-   - Click "Past Month" to access the month view of selected month
-2. **View Dashboard**: See monthly summary with an income/expense breakdown
+   - Click "Current Month" to access the current dashboard.
+   - Click "Credit Card preview" to access the your credit card usage and future payments.
+   - Click "Savings" to access the yearly savings analysis.
+   - Click "Past Month" to access the month view of selected month.
+2. **View Dashboard**: See monthly summary with an income/expense breakdown and credit card usage.
 3. **Add Transaction**: Click "Add Entry" button
-   - Select transaction type (Income/Expense)
-   - Choose category and payment method
-   - Enter amount and description
-   - Click OK to save
-4. **Add XLSX**: Click "Add XLSX file" button
-   - Select Account (Account must match your file)
-   - Add file path
-   - Click OK to save
+   - Enter amount and description.
+   - Choose category and payment method.
+   - Write description.
+   - Click OK to save.
+4. **Import Bank Statement**: Click "Add file" button
+   - Select Account **(Account must match your file)**.
+   - Add file path (supported formats: `.xlsx`, `.xls`, `.csv`, `.pdf`).
+   - Click OK to save.
 5. **Edit Table**: Double click on a transaction
    - Modify fields and press "OK" button
    - Press "Delete" to remove the transaction
 6. **Edit Category**: Click "Edit" button
-   - Press "+" to add Income/Expense/Account category
+   - Press "+" to add Income/Expense category
    - Press "-" to remove category (Be careful with this action)
    - Double-click on categories to rename them
 7. **View Analytics**: Pie chart shows expense distribution
@@ -161,8 +169,9 @@ cmake --build .
 
 - [x] User authentication (Supabase)
 - [x] XLSX bank statement import with auto-classification
+- [x] PDF bank statement import (debit and credit cards)
 - [x] Remote database integration (Supabase)
-- [ ] Date range filtering
+- [x] Date range filtering
 - [ ] Export to PDF
 - [ ] Budget goals and alerts
 - [ ] Multi-currency support
